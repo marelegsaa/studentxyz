@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<div>
+    <section class="signup-container">
+        <h1 class="titlu glow">studentxyz</h1>
+                <form id="formularemail" class="info" action="#">
+                    <div class="input-section">
+                    <input id="nume" type="text" placeholder="nume" required class="input">
+                    <input id="prenume" type="text" placeholder="prenume" required class="input">
+                    <select class="select" name="facultate" id="facultate" required>
+                        <option value="">--selectează facultatea--</option>
+                        <option value="csie">facultatea de cibernetică, statistică și informatică economică</option>
+                        <option value="finante">facultatea de finanțe, asigurări, bănci și burse de valori</option>
+                        <option value="marketing">facultatea de marketing</option>
+                        <option value="comert">facultatea de comerț</option>
+                        <option value="economie">facultatea de economie teoretică și aplicată</option>
+                        <option value="contabilitate">facultatea de contabilitate și informatică de gestiune</option>
+                        <option value="management">facultatea de management</option>
+                        <option value="rei">facultatea de relații economice internaționale</option>
+                        <option value="fabiz">facultatea de administrarea afacerilor în limbi străine (fabiz)</option>
+                      </select>
+                      
+                      <!-- specializare -->
+                      <select class="select" name="specializare" id="specializare" style="display: none;" required>
+                        <option value="">--selectează specializarea--</option>
+                      </select>
+                      
+                      <!-- an -->
+                      <select class="select" name="an" id="an" style="display: none;" required>
+                        <option value="">--selectează anul--</option>
+                        <option value="1">anul 1</option>
+                        <option value="2">anul 2</option>
+                        <option value="3">anul 3</option>
+                      </select>
+                    <input id="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
+                    <input type="password" placeholder="parolă" required class="parola">
+                    <input type="password" placeholder="repetă parola" required class="parola">
+                    </div>
+                    <div id="email-error" class="eroare-email"></div>
+                    <a href="{{ url_for('login') }}" class="link" style="text-align: center; padding-top: 10px;" >ai deja cont?</a>
+                    <div class="button-section">
+                        <button class="signup">înscrie-te</button>
+                    </div>
+                </form>
+        <p class="subtext">&copy; 2025 marelegsaa - all rights reserved.</p>
+    </section>
+</div>
+{% endblock %}

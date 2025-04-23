@@ -1,0 +1,279 @@
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Black.woff') format('woff');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-BlackItalic.woff') format('woff');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-HeavyItalic.woff') format('woff');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-BoldItalic.woff') format('woff');
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Heavy.woff') format('woff');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Italic.woff') format('woff');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-LightItalic.woff') format('woff');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-MediumItalic.woff') format('woff');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-UltraLight.woff') format('woff');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Thin.woff') format('woff');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-ThinItalic.woff') format('woff');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-UltraLightItalic.woff') format('woff');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/static/fonts/HelveticaNeue-Roman.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: 'Helvetica Neue';
+  min-height: 100vh;
+  background-image: url('background_login.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin: 0;
+}
+
+.glow {
+  font-size: 80px;
+  color: #fff;
+  text-align: center;
+  -webkit-animation: glow 1s ease-in-out infinite alternate;
+  -moz-animation: glow 1s ease-in-out infinite alternate;
+  animation: glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 0px #fff, 0 0 5px #fff, 0 0 10px #fff;
+  }
+  to {
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #fff;
+  }
+}
+
+.subtext {
+  color: white;
+  font-size: 15px;
+  text-align: center;
+  margin-top: 85px;
+}
+
+.container {
+  width: 400px;
+  height: 370px;
+  margin: 100px auto;
+  background-color:rgb(24, 24, 24); 
+  border: 1px solid black;
+  border-radius: 8px;
+  align-content: center;
+}
+
+.login-container {
+  width: 400px;
+  height: 500px;
+  margin: 100px auto;
+  background-color:rgb(24, 24, 24); 
+  border: 1px solid black;
+  border-radius: 8px;
+  align-content: center;
+}
+
+.signup-container {
+  width: 400px;
+  height: 800px;
+  margin: 10px auto;
+  background-color:#181818; 
+  border: 1px solid black;
+  border-radius: 8px;
+  align-content: center;
+}
+
+.titlu {
+  color: white;
+  font-size: 65px;
+  -webkit-text-stroke: 1px;
+  -webkit-text-stroke-color: white; 
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.info {
+  margin-top: 55px;
+}
+
+.input-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  width: 310px;  
+  height: 20px; 
+  font-size: 15px; 
+  padding: 10px; 
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+select {
+  width: 333px;  
+  height: 43px; 
+  font-size: 15px;  
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  background-color: white;
+}
+
+.eroare-email {
+  color: red;
+  font-size: 0.9em;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+button {
+  width: 200px;
+  height: 35px;
+  font-size: 17px;
+  background-color: #99FF99;
+  color: black;
+  border: 1px solid black;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button.signup {
+  background-color: #99FFFF;
+}
+
+button.reset {
+  background-color: #FF8A8A;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+}
+
+button:hover {
+  opacity: 0.9;
+}
