@@ -1,6 +1,8 @@
-# studentxyz
+<p align="center">
+  <img src="static/css/studentxyz.svg" alt="studentxyz" width="400"/>
+</p>
 
-studentxyz este o aplicație web destinată studenților ase, care oferă o platformă inteligentă pentru urmărirea performanțelor academice și dezvoltarea personală, utilizând algoritmi de machine learning.
+<p align="center">studentxyz este o aplicație web destinată studenților ase, care oferă o platformă inteligentă pentru urmărirea performanțelor academice și dezvoltarea personală, utilizând algoritmi de machine learning.</p>
 
 ## funcționalități principale
 
