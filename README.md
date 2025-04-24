@@ -1,8 +1,8 @@
-<p align="center">
+<p>
   <img src="static/css/studentxyz.svg" alt="studentxyz" width="400"/>
 </p>
 
-<p align="center">studentxyz este o aplicație web destinată studenților ase, care oferă o platformă inteligentă pentru urmărirea performanțelor academice și dezvoltarea personală, utilizând algoritmi de machine learning.</p>
+**studentxyz** este o aplicație web destinată studenților academiei de studii economice, care oferă o platformă inteligentă pentru urmărirea performanțelor academice și dezvoltarea personală, utilizând algoritmi de machine learning.
 
 ## funcționalități principale
 
@@ -10,7 +10,7 @@
 
 - **selectarea facultății și introducerea notelor**: studenții își aleg facultatea și introduc notele finale pentru fiecare materie din anul curent, organizate pe semestre.
 
-- **estimarea performanțelor viitoare**: folosind machine learning, aplicația prezice performanțele academice în semestrul sau anul următor. de exemplu, dacă un student a obținut rezultate bune la materii precum bpc sau bti, există șanse mari să se descurce bine și la atp sau so.
+- **estimarea performanțelor viitoare**: folosind machine learning, aplicația prezice performanțele academice în semestrul sau anul următor. *de exemplu, dacă un student a obținut rezultate bune la materii precum bpc sau bti, există șanse mari să se descurce bine și la atp sau so.*
 
 - **analiza progresului**: vizualizări grafice și date statistice care reflectă evoluția academică a studentului de-a lungul timpului.
 
