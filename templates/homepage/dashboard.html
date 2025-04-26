@@ -1,0 +1,38 @@
+{% extends 'base_home.html' %}
+
+{% block head %}
+<title>dashboard | studentxyz</title>
+{% endblock %}
+
+{% block body %}
+<nav class="nav nav_closed">
+    <div class="nav_expand">
+        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
+    </div>
+    <ul class="nav_list">
+        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100"></img>
+        <li class="nav_listitem"><a href="{{ url_for('user') }}">
+            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40"></img>
+            <p>profil personal</p>
+        </a></li>
+        <li class="nav_listitem nav_listitem-active"><a href="{{ url_for('dashboard') }}">
+            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40"></img>
+            <p>dashboard</p>
+        </a></li>
+        <li class="nav_listitem"><a href="{{ url_for('analytics') }}">
+            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40"></img>
+            <p>analytics</p>
+        </a></li>
+        <li class="nav_listitem"><a href="{{ url_for('settings') }}">
+            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40"></img>
+            <p>setări</p>
+        </a></li>
+        <li class="nav_listitem nav_logoutitem">
+            <a href="{{ url_for('login') }}">
+                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40"></img>
+                <p>log-out</p>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock %}

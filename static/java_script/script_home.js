@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     navExpand.addEventListener('click', function() {
       nav.classList.toggle('nav_closed');
     });
-  
+/*
     navListItem.forEach(function(link) {
       link.addEventListener('click', listActive);
     });
@@ -17,4 +17,5 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       this.classList.add('nav_listitem-active');
     }
+*/
   });
