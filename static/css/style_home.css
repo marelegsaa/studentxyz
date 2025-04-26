@@ -1,0 +1,274 @@
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-BlackItalic.woff') format('woff');
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-HeavyItalic.woff') format('woff');
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-BoldItalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Heavy.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-LightItalic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-MediumItalic.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-UltraLight.woff') format('woff');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-ThinItalic.woff') format('woff');
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-UltraLightItalic.woff') format('woff');
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+  }
+  
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('/static/fonts/HelveticaNeue-Roman.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+.invert {
+    -webkit-filter: invert(1);
+    filter: invert(1);
+}
+.invert:hover {
+    opacity: 0.8;
+}
+
+.glow {
+    display: inline-block;
+    -webkit-animation: glow 1s ease-in-out infinite alternate;
+    -moz-animation: glow 1s ease-in-out infinite alternate;
+    animation: glow 1s ease-in-out infinite alternate;
+    filter: drop-shadow(1px 0px 0.5px #fff);
+}
+
+@keyframes glow {
+    from { filter: drop-shadow(0px 0px 0.5px #fff); }
+    to { filter: drop-shadow(0px 0px 4px #fff); }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Helvetica Neue';
+    min-height: 100vh;
+    background-image: url('/static/css/background_login.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0;
+}
+
+.nav {
+    position: absolute;
+    background-color: rgb(24, 24, 24);
+    box-shadow: 0px 0px 10px black;
+    height: 100vh;
+    width: 26rem;
+    padding-top: 1rem;
+    transition: width 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav.nav_closed {
+    width: 6rem; 
+}
+
+.nav_expand {
+    width: 3rem;
+    height: 3rem;
+    background-color: rgb(24, 24, 24);
+    box-shadow: 0px 0px 10px black;
+    border-radius: 50%;
+    position: absolute;
+    right: -1.5rem;
+    top: 1.5rem;
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transform: rotateZ(-180deg);
+    transition: transform 250ms ease-in-out;
+}
+
+.nav.nav_closed .nav_expand {
+    transform: rotateZ(0deg);
+}
+
+.nav_list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 1rem;
+}
+
+.nav_listitem {
+    list-style: none;
+    transition: all 250ms ease-in;
+    padding: 1rem 1.5rem;
+    border-left: 6px solid transparent;
+    cursor: pointer;
+}
+
+.nav_listitem:first-child {
+    margin-bottom: 2rem;
+}
+
+.nav_listitem:hover {
+    background-color: rgb(14, 14, 14);
+}
+
+.nav_listitem a {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+    font-weight: 400;
+    font-size: 25px;
+}
+
+.nav.nav_closed .nav_listitem a span,
+.nav.nav_closed .nav_listitem p {
+    display: none;
+}
+
+.nav.nav_closed .nav_listitem a {
+    justify-content: center;
+}
+
+.nav_listitem-active {
+    background-color: rgb(14, 14, 14);
+    color: white;
+    border-left: 6px solid white;
+}
+
+.nav_listitem-active a {
+    color: white;
+}
+
+.nav_logo {
+    list-style: none;
+    transition: all 250ms ease-in;
+    padding: 1rem 1.5rem;
+    border-left: 6px solid transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    width: 100%;
+}
+
+.nav.nav_closed .nav_logo {
+    display: none;
+}
+
+.nav_logoutitem {
+    margin-top: auto;
+}

@@ -4,16 +4,16 @@ app = Flask(__name__)
 
 @app.route('/')
 def login():
-    return render_template("login.html")
+    return render_template("login/login.html")
 @app.route('/home')
 def home():
-    return render_template("home.html")
+    return render_template("homepage/home.html")
 @app.route('/signup')
 def signup():
-    return render_template('signup.html')
+    return render_template('login/signup.html')
 @app.route('/reset')
 def reset():
-    return render_template('reset.html')
+    return render_template('login/reset.html')
 if __name__ == "__main__":
     app.run(debug=True)
 
