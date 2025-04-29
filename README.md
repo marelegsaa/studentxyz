@@ -8,7 +8,11 @@
 
 - **autentificare securizată**: accesul este permis doar cu adrese de e-mail instituționale de forma `@stud.ase.ro`.
 
+<img src="screenshots/screenshot_1.png" alt="screenshot_1"/>
+
 - **selectarea facultății și introducerea notelor**: studenții își aleg facultatea și introduc notele finale pentru fiecare materie din anul curent, organizate pe semestre.
+
+<img src="screenshots/screenshot_2.png" alt="screenshot_2"/>
 
 - **estimarea performanțelor viitoare**: folosind machine learning, aplicația prezice performanțele academice în semestrul sau anul următor. *de exemplu, dacă un student a obținut rezultate bune la materii precum bpc sau bti, există șanse mari să se descurce bine și la atp sau so.*
 
