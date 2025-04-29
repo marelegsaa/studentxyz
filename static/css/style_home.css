@@ -275,13 +275,17 @@ body {
 }
 
 .dashboard_content {
+  flex: 1;
   padding: 3rem;
   margin-left: 100px;
 }
 
 .dashboard_headers {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 0.5rem;
+  text-align: center;
   margin-bottom: 0.5rem;
 }
 
@@ -295,8 +299,7 @@ body {
 }
 
 .dashboard_table {
-  width: auto;
-  max-width: 45%;
+  width: 100%;
   border-collapse: collapse;
   background-color: rgb(37, 37, 37);
   box-shadow: 0px 0px 5px black;
@@ -356,4 +359,26 @@ body {
 .dashboard_table th:nth-child(2),
 .dashboard_table td:nth-child(2) {
   width: 1%;
+}
+
+.dashboard_button_wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 100px;
+}
+
+.ml_button {
+  padding: 10px 15px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: rgb(29, 29, 29);
+  color: white;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.switch_button:hover {
+  background-color: rgb(24, 24, 24);
 }
