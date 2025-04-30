@@ -1,11 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-
   const nav = document.querySelector('.nav');
   const navExpand = document.querySelector('.nav_expand');
   const navListItem = document.querySelectorAll('.nav_listitem');
   const anElements = document.querySelectorAll('.an');
   const semestruElements = document.querySelectorAll('.semestru');
-  const tbody = document.querySelector('.dashboard_table tbody');
+  const tbodyElements = document.querySelectorAll('.dashboard_table tbody');
 
   const materii = {
     '1-1': [
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function validateOptionale() {
-    const selects = tbody.querySelectorAll('select');
+    const selects = document.querySelectorAll('select');
     if (selects.length > 1) {
       const [select1, select2] = selects;
 
@@ -86,12 +85,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function updateMaterii() {
-    const an = document.querySelector('.an').textContent.trim();
-    const semestru = document.querySelector('.semestru').textContent.trim();
-    const cheie = `${an}-${semestru}`;
-    const listaMaterii = materii[cheie];
+  function getNextSemester(an, semestru) {
+    let nextAn = parseInt(an);
+    let nextSemestru = parseInt(semestru);
+    
+    if (nextSemestru === 1) {
+      nextSemestru = 2;
+    } else {
+      nextSemestru = 1;
+      nextAn += 1;
+    }
 
+    const cheie = `${nextAn}-${nextSemestru}`;
+    if (!materii[cheie] && nextAn <= 3) {
+      return null;
+    }
+    
+    return { an: nextAn, semestru: nextSemestru };
+  }
+
+  function updateTable(tbody, listaMaterii, cheie) {
     tbody.innerHTML = '';
 
     if (listaMaterii) {
@@ -129,46 +142,65 @@ document.addEventListener('DOMContentLoaded', function() {
       tbody.querySelectorAll('.nota').forEach(cell => {
         cell.addEventListener('blur', () => validateNota(cell));
       });
-
     } else {
       tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">nu există date pentru acest an/semestru</td></tr>';
     }
   }
 
-  anElements.forEach(cell => {
-    cell.addEventListener('blur', () => {
-      let value = cell.innerText.trim();
-      if (!/^\d+$/.test(value) || value < 1 || value > 3) {
-        alert('anul trebuie să fie între 1 și 3.');
-        cell.innerText = '1';
-      }
-      updateMaterii();
-    });
+  function updateMaterii() {
+    const an = document.querySelectorAll('.an')[0].textContent.trim();
+    const semestru = document.querySelectorAll('.semestru')[0].textContent.trim();
+    const cheie = `${an}-${semestru}`;
+    const listaMaterii = materii[cheie];
+
+    const tbodyTop = tbodyElements[0];
+    updateTable(tbodyTop, listaMaterii, cheie);
+
+    const nextSemester = getNextSemester(an, semestru);
+    const tbodyBottom = tbodyElements[1];
+    const headersBottom = document.querySelectorAll('.dashboard_headers')[1];
+    
+    if (nextSemester) {
+      const nextCheie = `${nextSemester.an}-${nextSemester.semestru}`;
+      const nextListaMaterii = materii[nextCheie];
+      
+      headersBottom.querySelector('.an').textContent = nextSemester.an;
+      headersBottom.querySelector('.semestru').textContent = nextSemester.semestru;
+      
+      updateTable(tbodyBottom, nextListaMaterii, nextCheie);
+      
+
+      headersBottom.querySelector('.an').setAttribute('contenteditable', 'false');
+      headersBottom.querySelector('.semestru').setAttribute('contenteditable', 'false');
+    } else {
+
+      headersBottom.querySelector('.an').textContent = '';
+      headersBottom.querySelector('.semestru').textContent = '';
+      tbodyBottom.innerHTML = '<tr><td colspan="2" style="text-align:center;">nu există un următor semestru</td></tr>';
+    }
+  }
+
+  document.querySelectorAll('.an')[0].addEventListener('blur', function() {
+    let value = this.innerText.trim();
+    if (!/^\d+$/.test(value) || value < 1 || value > 3) {
+      alert('anul trebuie să fie între 1 și 3.');
+      this.innerText = '1';
+    }
+    updateMaterii();
   });
 
-  semestruElements.forEach(cell => {
-    cell.addEventListener('blur', () => {
-      let value = cell.innerText.trim();
-      if (!/^\d+$/.test(value) || value < 1 || value > 2) {
-        alert('semestrul trebuie să fie între 1 și 2.');
-        cell.innerText = '1';
-      }
-      updateMaterii();
-    });
+  document.querySelectorAll('.semestru')[0].addEventListener('blur', function() {
+    let value = this.innerText.trim();
+    if (!/^\d+$/.test(value) || value < 1 || value > 2) {
+      alert('semestrul trebuie să fie între 1 și 2.');
+      this.innerText = '1';
+    }
+    updateMaterii();
   });
 
   navExpand.addEventListener('click', function() {
     nav.classList.toggle('nav_closed');
   });
 
-  /*
-  navListItem.forEach(function(link) {
-    link.addEventListener('click', function() {
-      navListItem.forEach(function(l) {
-        l.classList.remove('nav_listitem-active');
-      });
-      this.classList.add('nav_listitem-active');
-    });
-  });
-  */
+  updateMaterii();
 });
