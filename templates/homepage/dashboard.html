@@ -3,8 +3,9 @@
 {% block head %}
 <title>dashboard | studentxyz</title>
 {% endblock %}
-<script src="{{ url_for('static', filename='java_script/script_dashboard.js') }}"></script>
+
 {% block body %}
+<script src="{{ url_for('static', filename='java_script/script_dashboard.js') }}"></script>
 <nav class="nav nav_closed">
     <div class="nav_expand">
         <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
