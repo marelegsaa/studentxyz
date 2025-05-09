@@ -11,6 +11,15 @@
     </head>
     <script src="{{ url_for('static', filename='java_script/script_login.js') }}"></script>
     <body>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         {% block body %}
         {% endblock %}
     </body>

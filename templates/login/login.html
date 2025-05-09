@@ -7,16 +7,16 @@
 <div>
     <section class="login-container">
             <img style="display: block; margin: 0 auto;" class="glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
-                <form id="formularemail" class="info" action="#">
+                <form id="formularemail" class="info" method="POST" action="{{ url_for('login') }}">
                     <div class="input-section">
-                    <input id="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
-                    <input type="password" placeholder="parolă" required class="parola">
+                    <input id="email" name="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
+                    <input name="password" type="password" placeholder="parolă" required class="parola">
                     </div>
                     <div id="email-error" class="eroare-email"></div>
                     <a href="{{ url_for('reset') }}" class="link" style="text-align: center;" >ți-ai uitat parola?</a>
                     <div class="button-section">
                         <button type="submit">log-in</button>
-                        <button id="btn-inscrie" data-inscriere-url="{{ url_for('signup') }}" class="signup">înscrie-te</button>
+                        <button type="button" id="btn-inscrie" class="signup" data-signup-url="{{ url_for('signup') }}">înscrie-te</button>
                     </div>
                 </form>
         <p class="subtext">&copy; 2025 marelegsaa - all rights reserved.</p>

@@ -1,31 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("signup.js loaded");
-  
-    const formular = document.getElementById("formularemail");
-    const emailInput = document.getElementById("email");
-    const mesajEroare = document.getElementById("email-error");
-  
-    formular.addEventListener("submit", function (event) {
-      const email = emailInput.value.trim();
-  
-      if (!email.endsWith("@stud.ase.ro")) {
-        event.preventDefault();
-        mesajEroare.textContent = "e-mailul trebuie să fie de forma nume@stud.ase.ro!";
-        mesajEroare.style.display = "block";
-      } else {
-        mesajEroare.textContent = "";
-        mesajEroare.style.display = "none";
-      }
+
+    document.getElementById('btn-inscrie')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        const signupUrl = this.getAttribute('data-signup-url');
+        window.location.href = signupUrl;
     });
-
-    const btnInscrie = document.getElementById("btn-inscrie");
-
-    if (btnInscrie) {
-      btnInscrie.addEventListener("click", function () {
-        const inscriereUrl = btnInscrie.getAttribute("data-inscriere-url");
-        window.location.href = inscriereUrl;
-      });
-    }
 
     const facultateSelect = document.getElementById("facultate");
     const specializareSelect = document.getElementById("specializare");

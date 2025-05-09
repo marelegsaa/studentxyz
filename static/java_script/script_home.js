@@ -6,4 +6,4 @@ document.addEventListener('DOMContentLoaded', function() {
   navExpand.addEventListener('click', function() {
     nav.classList.toggle('nav_closed');
   });
-  });
+});
