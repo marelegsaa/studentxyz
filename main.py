@@ -54,6 +54,10 @@ def signup():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+
+        if not email.endswith('@stud.ase.ro'):
+            flash('trebuie să folosești un email instituțional (@stud.ase.ro)', 'error')
+            return redirect(url_for('signup'))
         
         if password != confirm_password:
             flash('parolele nu coincid!', 'error')
@@ -61,7 +65,7 @@ def signup():
         
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash('Acest email este deja înregistrat!', 'error')
+            flash('acest email este deja înregistrat!', 'error')
             return redirect(url_for('signup')) 
         
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
@@ -79,10 +83,6 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        session['specializare'] = specializare
-        session['username'] = new_user.email
-        session['user_id'] = new_user.id
-        
         flash('cont creat cu succes!', 'success')
         return redirect(url_for('login'))
     
@@ -112,6 +112,7 @@ def logout():
 def dashboard():
     if "username" not in session:
         return redirect(url_for('login'))
+    print(session['specializare'])
     return render_template('homepage/dashboard.html', specializare=session['specializare'])
 
 @app.route('/analytics')

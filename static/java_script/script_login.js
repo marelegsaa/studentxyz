@@ -1,6 +1,22 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("signup.js loaded");
 
+    document.getElementById('formularemail')?.addEventListener('submit', function(e) {
+    const email = document.getElementById('email').value;
+    const emailError = document.getElementById('email-error');
+    
+    if (!email.endsWith('@stud.ase.ro')) {
+        e.preventDefault();
+        emailError.textContent = 'trebuie să folosești un email instituțional (@stud.ase.ro)';
+        return false;
+    }
+    return true;
+  });
+
+  document.getElementById('email')?.addEventListener('input', function() {
+    document.getElementById('email-error').textContent = '';
+  });
+
     document.getElementById('btn-inscrie')?.addEventListener('click', function(e) {
         e.preventDefault();
         const signupUrl = this.getAttribute('data-signup-url');
