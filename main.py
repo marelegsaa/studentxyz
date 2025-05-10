@@ -45,6 +45,8 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if "username" in session:
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
         nume = request.form.get('nume')
         prenume = request.form.get('prenume')
@@ -90,6 +92,8 @@ def signup():
 
 @app.route('/reset', methods=['GET', 'POST'])
 def reset():
+    if "username" in session:
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
