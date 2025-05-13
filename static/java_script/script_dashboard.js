@@ -52,7 +52,7 @@ const materii = {
     '2-1': [
       'programare orientată obiect', 'baze de date', 'statistică macroeconomică',
       'probabilități și statistică matematică', 'microeconomie cantitativă',
-      'management', 'finanțe'
+      'management', 'finanțe', 'educație fizică și sport'
     ],
     '2-2': [
       'programarea aplicațiilor windows', 'macroeconomie cantitativă',
@@ -73,16 +73,16 @@ const materii = {
   'statistică și previziune economică': {
     '1-1': [
       'economie', 'algebră', 'bazele statisticii', 'bazele cercetărilor operaționale',
-      'bazele tehnologiei informației', 'bazele programării calculatoarelor'
+      'bazele tehnologiei informației', 'bazele programării calculatoarelor', 'educație fizică și sport'
     ],
     '1-2': [
       'analiză matematică', 'statistică', 'algoritmi și tehnici de programare',
-      'sisteme de operare', 'bazele ciberneticii economice'
+      'sisteme de operare', 'bazele ciberneticii economice', 'educație fizică și sport'
     ],
     '2-1': [
       'programare orientată obiect', 'baze de date', 'statistică macroeconomică',
       'probabilități și statistică matematică', 'microeconomie cantitativă', 'management',
-      'finanțe'
+      'finanțe', 'educație fizică și sport'
     ],
     '2-2': [
       'pachete software', 'statistică neparametrică', 'econometrie',
