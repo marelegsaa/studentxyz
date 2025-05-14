@@ -75,28 +75,32 @@ document.addEventListener("DOMContentLoaded", function () {
       ]
     };
   
-    facultateSelect.addEventListener("change", function () {
-      const selected = facultateSelect.value;
-      specializareSelect.innerHTML = '<option value="">--selectează specializarea--</option>';
-      specializareSelect.style.display = "none";
-      anSelect.style.display = "none";
-  
-      if (specializari[selected]) {
-        specializari[selected].forEach(function (spec) {
-          const opt = document.createElement("option");
-          opt.value = spec;
-          opt.textContent = spec;
-          specializareSelect.appendChild(opt);
+    if (facultateSelect) {
+        facultateSelect.addEventListener("change", function () {
+            const selected = facultateSelect.value;
+            specializareSelect.innerHTML = '<option value="">--selectează specializarea--</option>';
+            specializareSelect.style.display = "none";
+            anSelect.style.display = "none";
+    
+            if (specializari[selected]) {
+                specializari[selected].forEach(function (spec) {
+                    const opt = document.createElement("option");
+                    opt.value = spec;
+                    opt.textContent = spec;
+                    specializareSelect.appendChild(opt);
+                });
+                specializareSelect.style.display = "block";
+            }
         });
-        specializareSelect.style.display = "block";
-      }
-    });
+    }
   
-    specializareSelect.addEventListener("change", function () {
-      if (specializareSelect.value) {
-        anSelect.style.display = "block";
-      } else {
-        anSelect.style.display = "none";
-      }
-    });
+    if (specializareSelect) {
+        specializareSelect.addEventListener("change", function () {
+            if (specializareSelect.value) {
+                anSelect.style.display = "block";
+            } else {
+                anSelect.style.display = "none";
+            }
+        });
+    }
   });
