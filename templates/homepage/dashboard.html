@@ -7,6 +7,7 @@
 {% block body %}
 <script>
     const specializare = '{{ specializare }}';
+    const note = {{ note|tojson|safe }};
 </script>
 <script src="{{ url_for('static', filename='java_script/script_dashboard.js') }}"></script>
 <nav class="nav nav_closed">

@@ -1,8 +1,8 @@
-from flask import Flask, render_template, url_for, request, redirect, session, flash
+from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User
+from models import db, User, Nota
 
 import os
 from dotenv import load_dotenv
@@ -204,6 +204,34 @@ def reset():
 
         flash('email trimis! verifică-ți inbox-ul pentru parola nouă.', 'info')
         return redirect(url_for('login'))
+    
+@app.route('/save_nota', methods=['POST'])
+def save_nota():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+
+    data = request.get_json()
+    an = data['an']
+    semestru = data['semestru']
+    materie = data['materie']
+    nota = data['nota']
+    user_id = session['user_id']
+
+    nota_existenta = Nota.query.filter_by(
+        user_id=user_id,
+        an=an,
+        semestru=semestru,
+        materie=materie
+    ).first()
+
+    if nota_existenta:
+        nota_existenta.nota = nota
+    else:
+        new_nota = Nota(user_id=user_id, an=an, semestru=semestru, materie=materie, nota=nota)
+        db.session.add(new_nota)
+
+    db.session.commit()
+    return jsonify({'status': 'success'})
 
 @app.route('/logout')
 def logout():
@@ -215,8 +243,18 @@ def logout():
 def dashboard():
     if "username" not in session:
         return redirect(url_for('login'))
-    print(session['specializare'])
-    return render_template('homepage/dashboard.html', specializare=session['specializare'])
+
+    user_id = session['user_id']
+    specializare = session['specializare']
+
+    note = Nota.query.filter_by(user_id=user_id).all()
+
+    note_dict = {}
+    for nota in note:
+        key = f"{nota.an}-{nota.semestru}-{nota.materie}"
+        note_dict[key] = nota.nota
+
+    return render_template('homepage/dashboard.html', specializare=specializare, note=note_dict)
 
 @app.route('/analytics')
 def analytics():

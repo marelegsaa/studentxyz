@@ -189,9 +189,16 @@ function updateTable(tbody, listaMaterii, optionalData) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${materie}</td>
-                <td contenteditable="true" class="nota"></td>
+                <td contenteditable="true" class="nota" data-materie="${materie}"></td>
             `;
             tbody.appendChild(tr);
+
+            const an = document.querySelectorAll('.an')[0].textContent.trim();
+            const semestru = document.querySelectorAll('.semestru')[0].textContent.trim();
+            const key = `${an}-${semestru}-${materie}`;
+            if (note[key]) {
+                tr.querySelector('.nota').innerText = note[key];
+            }
         });
 
         if (optionalData) {
@@ -205,7 +212,7 @@ function updateTable(tbody, listaMaterii, optionalData) {
                             ${selectHTML}
                         </select>
                     </td>
-                    <td contenteditable="true" class="nota"></td>
+                    <td contenteditable="true" class="nota" data-materie="optional-${i}"></td>
                 `;
                 tbody.appendChild(optionalRow);
             }
@@ -216,7 +223,10 @@ function updateTable(tbody, listaMaterii, optionalData) {
         }
 
         tbody.querySelectorAll('.nota').forEach(cell => {
-            cell.addEventListener('blur', () => validateNota(cell));
+            cell.addEventListener('blur', () => {
+                validateNota(cell);
+                saveNota(cell);
+            });
         });
     } else {
         tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">nu există date pentru acest an/semestru</td></tr>';
@@ -274,6 +284,34 @@ function updateMaterii() {
     }
     updateMaterii();
   });
+
+function saveNota(cell) {
+    const an = document.querySelectorAll('.an')[0].textContent.trim();
+    const semestru = document.querySelectorAll('.semestru')[0].textContent.trim();
+    const materie = cell.dataset.materie;
+    const nota = cell.innerText.trim();
+
+    fetch('/save_nota', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            an: an,
+            semestru: semestru,
+            materie: materie,
+            nota: nota
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log('nota salvată cu succes!');
+        } else {
+            console.error('eroare la salvarea notei.');
+        }
+    });
+}
 
   updateMaterii();
 });
