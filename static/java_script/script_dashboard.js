@@ -181,7 +181,7 @@ function getNextSemester(an, semestru) {
     return { an: nextAn, semestru: nextSemestru };
 }
 
-function updateTable(tbody, listaMaterii, optionalData) {
+function updateTable(tbody, listaMaterii, optionalData, editable = true) {
     tbody.innerHTML = '';
 
     if (listaMaterii) {
@@ -189,7 +189,7 @@ function updateTable(tbody, listaMaterii, optionalData) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${materie}</td>
-                <td contenteditable="true" class="nota" data-materie="${materie}"></td>
+                <td ${editable ? 'contenteditable="true" class="nota"' : ''} data-materie="${materie}"></td>
             `;
             tbody.appendChild(tr);
 
@@ -197,7 +197,7 @@ function updateTable(tbody, listaMaterii, optionalData) {
             const semestru = document.querySelectorAll('.semestru')[0].textContent.trim();
             const key = `${an}-${semestru}-${materie}`;
             if (note[key]) {
-                tr.querySelector('.nota').innerText = note[key];
+                tr.querySelector('td[data-materie]').innerText = note[key];
             }
         });
 
@@ -207,27 +207,31 @@ function updateTable(tbody, listaMaterii, optionalData) {
                 const selectHTML = optionalData.optiuni.map(opt => `<option value="${opt}">${opt}</option>`).join('');
                 optionalRow.innerHTML = `
                     <td>
-                        <select>
+                        <select ${editable ? '' : 'disabled'}>
                             <option disabled selected>alege materie opțională...</option>
                             ${selectHTML}
                         </select>
                     </td>
-                    <td contenteditable="true" class="nota" data-materie="optional-${i}"></td>
+                    <td ${editable ? 'contenteditable="true" class="nota"' : ''} data-materie="optional-${i}"></td>
                 `;
                 tbody.appendChild(optionalRow);
             }
 
-            tbody.querySelectorAll('select').forEach(select => {
-                select.addEventListener('change', validateOptionale);
-            });
+            if (editable) {
+                tbody.querySelectorAll('select').forEach(select => {
+                    select.addEventListener('change', validateOptionale);
+                });
+            }
         }
 
-        tbody.querySelectorAll('.nota').forEach(cell => {
-            cell.addEventListener('blur', () => {
-                validateNota(cell);
-                saveNota(cell);
+        if (editable) {
+            tbody.querySelectorAll('.nota').forEach(cell => {
+                cell.addEventListener('blur', () => {
+                    validateNota(cell);
+                    saveNota(cell);
+                });
             });
-        });
+        }
     } else {
         tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">nu există date pentru acest an/semestru</td></tr>';
     }
@@ -242,7 +246,7 @@ function updateMaterii() {
     const optionalData = optiuniOptionale[cheie] || null;
 
     const tbodyTop = tbodyElements[0];
-    updateTable(tbodyTop, listaMaterii, optionalData);
+    updateTable(tbodyTop, listaMaterii, optionalData, true);
 
     const nextSemester = getNextSemester(an, semestru);
     const tbodyBottom = tbodyElements[1];
@@ -256,7 +260,7 @@ function updateMaterii() {
         headersBottom.querySelector('.an').textContent = nextSemester.an;
         headersBottom.querySelector('.semestru').textContent = nextSemester.semestru;
         
-        updateTable(tbodyBottom, nextListaMaterii, nextOptionalData);
+        updateTable(tbodyBottom, nextListaMaterii, nextOptionalData, false);
 
         headersBottom.querySelector('.an').setAttribute('contenteditable', 'false');
         headersBottom.querySelector('.semestru').setAttribute('contenteditable', 'false');
