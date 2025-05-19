@@ -1,5 +1,6 @@
 .env
-env/
+venv/
 __pycache__/
 *.pyc
+nohup.out
 instance/database.db

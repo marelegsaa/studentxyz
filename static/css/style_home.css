@@ -427,6 +427,7 @@ body {
     overflow-x: auto;
     justify-content: space-between;
     background: rgb(24, 24, 24);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
   .nav_logo {
     display: none;
