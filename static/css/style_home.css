@@ -473,13 +473,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.4rem;
     text-align: center;
     margin-bottom: 0.5rem;
   }
 
   .dashboard_headers h1 {
-    font-size: 1.2rem;
+    font-size: 2.5rem;
     color: transparent;
     -webkit-text-stroke: 0.6px;
     -webkit-text-stroke-color: white; 
@@ -489,6 +489,34 @@ body {
   .dashboard_table th, .dashboard_table td {
     font-size: 0.8rem;
     padding: 0.7rem 0.9rem;
+  }
+  .dashboard_table td select,
+  .dashboard_table td select:disabled {
+    background-color: transparent;
+    color: #FF8A8A;
+    font-size: 0.8rem;
+    text-transform: lowercase;
+    padding: 0; 
+    border: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border-radius: 0;
+    box-shadow: none;
+    vertical-align: middle;
+    line-height: 1.2;
+  }
+  .dashboard_table td select option {
+    background-color: rgb(37, 37, 37);
+    color: white;
+    font-size: 0.8rem;
+    text-transform: lowercase;
+  }
+  .dashboard_table td {
+    background-color: rgb(37, 37, 37);
   }
   .dashboard_button_wrapper {
     margin-left: 0;
@@ -501,6 +529,7 @@ body {
     padding: 8px 10px;
     border-radius: 50%;
   }
+  .mobile-hide-dash { display: none !important; }
 }
 
 @media (max-width: 480px) {
@@ -508,13 +537,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.3rem;
     text-align: center;
     margin-bottom: 0.5rem;
   }
 
   .dashboard_headers h1 {
-    font-size: 1rem;
+    font-size: 2.3rem;
     color: transparent;
     -webkit-text-stroke: 0.5px;
     -webkit-text-stroke-color: white; 
@@ -525,8 +554,34 @@ body {
     font-size: 0.7rem;
     padding: 0.6rem 0.8rem;
   }
+  .dashboard_table td select,
+  .dashboard_table td select:disabled {
+    font-size: 0.7rem;
+    padding: 0;
+    color: #FF8A8A;
+    background-color: transparent;
+    border: none;
+    text-transform: lowercase;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    vertical-align: middle;
+    line-height: 1.2;
+  }
+  .dashboard_table td select option {
+    font-size: 0.7rem;
+    background-color: rgb(37, 37, 37);
+    color: white;
+    text-transform: lowercase;
+  }
+  .dashboard_table td {
+    background-color: rgb(37, 37, 37);
+  }
   .ml_button {
     font-size: 13px;
     padding: 6px 8px;
   }
+  .mobile-hide-dash { display: none !important; }
 }
