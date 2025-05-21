@@ -3,6 +3,7 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Nota
+from validari import MATERII, OPTIUNI_OPTIONALE
 
 import os
 from dotenv import load_dotenv
@@ -216,6 +217,45 @@ def save_nota():
     materie = data['materie']
     nota = data['nota']
     user_id = session['user_id']
+    specializare = session.get('specializare')
+
+    try:
+        an_int = int(an)
+        sem_int = int(semestru)
+    except ValueError:
+        return jsonify({'status': 'error', 'msg': 'an sau semestru invalid'}), 400
+    if an_int not in [1, 2, 3] or sem_int not in [1, 2]:
+        return jsonify({'status': 'error', 'msg': 'anul trebuie să fie între 1 și 3, semestrul între 1 și 2'}), 400
+
+    cheie = f"{an}-{semestru}"
+    materii_valide = []
+    if specializare in MATERII and cheie in MATERII[specializare]:
+        materii_valide.extend(MATERII[specializare][cheie])
+    if cheie in OPTIUNI_OPTIONALE:
+        materii_valide.extend(OPTIUNI_OPTIONALE[cheie])
+        materii_valide.extend([f"optional-{i}" for i in range(2)])
+
+    if materie not in materii_valide:
+        return jsonify({'status': 'error', 'msg': 'materie invalidă'}), 400
+
+    if nota is None or str(nota).strip() == '':
+        nota_existenta = Nota.query.filter_by(
+            user_id=user_id,
+            an=an,
+            semestru=semestru,
+            materie=materie
+        ).first()
+        if nota_existenta:
+            db.session.delete(nota_existenta)
+            db.session.commit()
+        return jsonify({'status': 'success', 'msg': 'nota ștearsă'})
+
+    try:
+        nota_int = int(nota)
+    except ValueError:
+        return jsonify({'status': 'error', 'msg': 'nota trebuie să fie număr întreg'}), 400
+    if nota_int < 1 or nota_int > 10:
+        return jsonify({'status': 'error', 'msg': 'nota trebuie să fie între 1 și 10'}), 400
 
     nota_existenta = Nota.query.filter_by(
         user_id=user_id,

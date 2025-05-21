@@ -1,21 +1,36 @@
+function sanitizeInput(str) {
+    if (!str) return '';
+    return str.replace(/<[^>]*>/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
+
+function sanitizeFormInputs(form) {
+    Array.from(form.elements).forEach(el => {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            if (el.type === 'email' || el.type === 'text' || el.type === 'password') {
+                el.value = sanitizeInput(el.value);
+            }
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     console.log("signup.js loaded");
 
     document.getElementById('formularemail')?.addEventListener('submit', function(e) {
-    const email = document.getElementById('email').value;
-    const emailError = document.getElementById('email-error');
-    
-    if (!email.endsWith('@stud.ase.ro')) {
-        e.preventDefault();
-        emailError.textContent = 'trebuie să folosești un email instituțional (@stud.ase.ro)';
-        return false;
-    }
-    return true;
-  });
+        sanitizeFormInputs(this);
+        const email = document.getElementById('email').value;
+        const emailError = document.getElementById('email-error');
+        if (!email.endsWith('@stud.ase.ro')) {
+            e.preventDefault();
+            emailError.textContent = 'trebuie să folosești un email instituțional (@stud.ase.ro)';
+            return false;
+        }
+        return true;
+    });
 
-  document.getElementById('email')?.addEventListener('input', function() {
-    document.getElementById('email-error').textContent = '';
-  });
+    document.getElementById('email')?.addEventListener('input', function() {
+        document.getElementById('email-error').textContent = '';
+    });
 
     document.getElementById('btn-inscrie')?.addEventListener('click', function(e) {
         e.preventDefault();

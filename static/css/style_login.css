@@ -323,3 +323,73 @@ button:hover {
     from {opacity: 1;}
     to {opacity: 0;}
 }
+
+@media (max-width: 500px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .container,
+  .login-container,
+  .signup-container {
+    width: 92vw;
+    max-width: 380px;
+    min-width: 0;
+    margin: 40px auto 40px auto;
+    border-radius: 10px;
+    box-shadow: 0px 0px 8px black;
+    padding: 18px 12px;
+  }
+  .container {
+    height: 280px;
+  }
+  .login-container {
+    height: 350px;
+  }
+  .signup-container {
+    height: 650px;
+  }
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  select {
+    width: 85vw;
+    max-width: 340px;
+    min-width: 0;
+    font-size: 14px;
+    padding: 8px;
+  }
+  select {
+    width: 85vw;
+    max-width: 359px;
+    min-width: 0;
+    height: 38px;
+    font-size: 14px;
+    padding: 8px;
+  }
+  button {
+    width: 65vw;
+    max-width: 200px;
+    min-width: 0;
+    font-size: 15px;
+    height: 32px;
+  }
+  .titlu {
+    font-size: 38px;
+  }
+  .subtext {
+    font-size: 13px;
+    margin-top: 40px;
+  }
+  .info {
+    margin-top: 25px;
+  }
+  .button-section {
+    margin-top: 10px;
+    gap: 7px;
+  }
+}

@@ -134,54 +134,7 @@ const optiuniOptionale = {
   }
 };
 
-  function validateNota(cell) {
-    let value = cell.innerText.trim();
-    if (!/^\d+$/.test(value) || value < 1 || value > 10) {
-      alert('nota trebuie să fie între 1 și 10.');
-      cell.innerText = '';
-    }
-  }
-
-  function validateOptionale() {
-    const selects = document.querySelectorAll('select');
-    if (selects.length > 1) {
-      const [select1, select2] = selects;
-
-      const val1 = select1.value;
-      const val2 = select2.value;
-
-      if (val1 && val2 && val1 === val2) {
-        alert('nu poți alege aceeași materie opțională de două ori.');
-        select2.value = '';
-      }
-
-      if (!val1 && !val2) {
-        alert('trebuie să alegi cel puțin o materie opțională.');
-      }
-    }
-  }
-
-function getNextSemester(an, semestru) {
-    let nextAn = parseInt(an);
-    let nextSemestru = parseInt(semestru);
-    
-    if (nextSemestru === 1) {
-        nextSemestru = 2;
-    } else {
-        nextSemestru = 1;
-        nextAn += 1;
-    }
-
-    const cheie = `${nextAn}-${nextSemestru}`;
-    
-    if (!materii[specializare] || !materii[specializare][cheie]) {
-        return null;
-    }
-    
-    return { an: nextAn, semestru: nextSemestru };
-}
-
-function updateTable(tbody, listaMaterii, optionalData, editable = true) {
+  function updateTable(tbody, listaMaterii, optionalData, editable = true) {
     tbody.innerHTML = '';
 
     if (listaMaterii) {
@@ -216,18 +169,11 @@ function updateTable(tbody, listaMaterii, optionalData, editable = true) {
                 `;
                 tbody.appendChild(optionalRow);
             }
-
-            if (editable) {
-                tbody.querySelectorAll('select').forEach(select => {
-                    select.addEventListener('change', validateOptionale);
-                });
-            }
         }
 
         if (editable) {
             tbody.querySelectorAll('.nota').forEach(cell => {
                 cell.addEventListener('blur', () => {
-                    validateNota(cell);
                     saveNota(cell);
                 });
             });
@@ -288,12 +234,17 @@ function updateMaterii() {
     }
     updateMaterii();
   });
+  
+function sanitizeInput(str) {
+    if (!str) return '';
+    return str.replace(/<[^>]*>/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
 
 function saveNota(cell) {
-    const an = document.querySelectorAll('.an')[0].textContent.trim();
-    const semestru = document.querySelectorAll('.semestru')[0].textContent.trim();
-    const materie = cell.dataset.materie;
-    const nota = cell.innerText.trim();
+    const an = sanitizeInput(document.querySelectorAll('.an')[0].textContent);
+    const semestru = sanitizeInput(document.querySelectorAll('.semestru')[0].textContent);
+    const materie = sanitizeInput(cell.dataset.materie);
+    const nota = sanitizeInput(cell.innerText);
 
     fetch('/save_nota', {
         method: 'POST',
@@ -312,7 +263,8 @@ function saveNota(cell) {
         if (data.status === 'success') {
             console.log('nota salvată cu succes!');
         } else {
-            console.error('eroare la salvarea notei.');
+            alert(data.msg || 'eroare la salvarea notei.');
+            updateMaterii();
         }
     });
 }
