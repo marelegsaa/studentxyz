@@ -197,22 +197,22 @@ function updateMaterii() {
     const nextSemester = getNextSemester(an, semestru);
     const tbodyBottom = tbodyElements[1];
     const headersBottom = document.querySelectorAll('.dashboard_headers')[1];
-    
     if (nextSemester) {
         const nextCheie = `${nextSemester.an}-${nextSemester.semestru}`;
         const nextListaMaterii = materii[specializare] ? materii[specializare][nextCheie] : null;
         const nextOptionalData = optiuniOptionale[nextCheie] || null;
-        
-        headersBottom.querySelector('.an').textContent = nextSemester.an;
-        headersBottom.querySelector('.semestru').textContent = nextSemester.semestru;
-        
+        const anElem = headersBottom.querySelector('.an');
+        const semElem = headersBottom.querySelector('.semestru');
+        if (anElem) anElem.textContent = nextSemester.an;
+        if (semElem) semElem.textContent = nextSemester.semestru;
         updateTable(tbodyBottom, nextListaMaterii, nextOptionalData, false);
-
-        headersBottom.querySelector('.an').setAttribute('contenteditable', 'false');
-        headersBottom.querySelector('.semestru').setAttribute('contenteditable', 'false');
+        if (anElem) anElem.setAttribute('contenteditable', 'false');
+        if (semElem) semElem.setAttribute('contenteditable', 'false');
     } else {
-        headersBottom.querySelector('.an').textContent = '';
-        headersBottom.querySelector('.semestru').textContent = '';
+        const anElem = headersBottom.querySelector('.an');
+        const semElem = headersBottom.querySelector('.semestru');
+        if (anElem) anElem.textContent = '';
+        if (semElem) semElem.textContent = '';
         tbodyBottom.innerHTML = '<tr><td colspan="2" style="text-align:center;">nu există un următor semestru</td></tr>';
     }
 }
@@ -267,6 +267,18 @@ function saveNota(cell) {
             updateMaterii();
         }
     });
+}
+
+function getNextSemester(an, semestru) {
+    let nextAn = parseInt(an);
+    let nextSemestru = parseInt(semestru);
+    if (nextSemestru === 1) {
+        nextSemestru = 2;
+    } else {
+        nextSemestru = 1;
+        nextAn += 1;
+    }
+    return { an: nextAn, semestru: nextSemestru };
 }
 
   updateMaterii();
