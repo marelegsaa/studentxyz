@@ -6,17 +6,17 @@
 {% block body %}
 <div>
     <section class="container">
-        <img style="display: block; margin: 0 auto;" class="glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
+        <img style="display: block; margin: 0 auto;" class="glow logo" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
                 <form id="formularemail" class="info" method="POST" action="{{ url_for('reset') }}">
                     <div class="input-section">
                     <input id="email" name="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
                     </div>
-                    <p style="text-align: center; color: white;">vei primi un e-mail cu noua parolă!</p>
+                    <p class="subtext" style="text-align: center; color: white;">vei primi un e-mail cu noua parolă!</p>
                     <div class="button-section">
                         <button type="submit" class="reset">schimbă parola</button>
                     </div>
                 </form>
-        <p style="text-align: center; color: white; margin-top: 50px;">&copy; 2025 marelegsaa - all rights reserved.</p>
+        <p class="subtext" style="text-align: center; color: white; margin-top: 50px;">&copy; 2025 marelegsaa - all rights reserved.</p>
     </section>
 </div>
 {% endblock %}

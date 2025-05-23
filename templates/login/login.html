@@ -6,7 +6,7 @@
 {% block body %}
 <div>
     <section class="login-container">
-            <img style="display: block; margin: 0 auto;" class="glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
+            <img style="display: block; margin: 0 auto;" class="glow logo" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
                 <form id="formularemail" class="info" method="POST" action="{{ url_for('login') }}">
                     <div class="input-section">
                     <input id="email" name="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
