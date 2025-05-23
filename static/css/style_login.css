@@ -129,11 +129,14 @@
 body {
   font-family: 'Helvetica Neue';
   min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-image: url('background_login.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  margin: 0;
 }
 
 .glow {
@@ -157,39 +160,48 @@ body {
   color: white;
   font-size: 15px;
   text-align: center;
-  margin-top: 85px;
+  margin-top: 60px;
+}
+
+.subtext_reset {
+  color: white;
+  font-size: 15px;
+  text-align: center;
 }
 
 .container {
-  width: 400px;
-  height: 370px;
+  width: 350px;
+  max-width: 90vw;
+  min-height: auto;
   margin: 100px auto;
-  background-color:rgb(24, 24, 24); 
+  padding: 20px;
+  background-color: rgb(24, 24, 24); 
   border: 1px solid black;
   border-radius: 8px;
-  align-content: center;
   box-shadow: 0px 0px 10px black;
 }
 
 .login-container {
-  width: 400px;
-  height: 500px;
+  width: 350px;
+  max-width: 90vw;
+  min-height: auto;
   margin: 100px auto;
-  background-color:rgb(24, 24, 24); 
+  padding: 20px;
+  background-color: rgb(24, 24, 24); 
   border: 1px solid black;
   border-radius: 8px;
-  align-content: center;
   box-shadow: 0px 0px 10px black;
 }
 
 .signup-container {
-  width: 400px;
-  height: 800px;
-  margin: 10px auto;
-  background-color:#181818; 
+  width: 350px;
+  max-width: 90vw;
+  min-height: auto;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #181818; 
   border: 1px solid black;
   border-radius: 8px;
-  align-content: center;
   box-shadow: 0px 0px 10px black;
 }
 
@@ -226,7 +238,7 @@ body {
 input[type="email"],
 input[type="password"],
 input[type="text"] {
-  width: 310px;  
+  width: 330px;  
   height: 20px; 
   font-size: 15px; 
   padding: 10px; 
@@ -236,7 +248,7 @@ input[type="text"] {
 }
 
 select {
-  width: 333px;  
+  width: 353px;  
   height: 43px; 
   font-size: 15px;  
   border-radius: 8px;
@@ -253,7 +265,7 @@ select {
 }
 
 button {
-  width: 200px;
+  width: 220px;
   height: 35px;
   font-size: 17px;
   background-color: #99FF99;
@@ -343,15 +355,18 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0px 0px 8px black;
     padding: 18px 12px;
+    overflow-x: hidden;
   }
   .container {
-    height: 305px;
+    height: 275px;
   }
   .login-container {
-    height: 350px;
+    height: 360px;
   }
-  .signup-container {
-    height: 650px;
+  .signup-container {   
+    min-height: auto;  
+    margin: 40px auto;  
+    height: auto;
   }
   input[type="email"],
   input[type="password"],
@@ -394,7 +409,7 @@ button:hover {
     margin-top: 25px;
   }
   .button-section {
-    margin-top: 10px;
+    margin-top: 15px;
     gap: 7px;
   }
 }
