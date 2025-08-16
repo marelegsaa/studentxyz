@@ -2,37 +2,216 @@
 
 {% block head %}
 <title>user | studentxyz</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/style_user.css')}}">
 {% endblock %}
 
 {% block body %}
 <nav class="nav nav_closed">
     <div class="nav_expand">
-        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
+        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40">
     </div>
     <ul class="nav_list">
-        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100"></img>
+        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100">
         <li class="nav_listitem nav_listitem-active"><a href="{{ url_for('user') }}">
-            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40">
             <p>profil personal</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('dashboard') }}">
-            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40">
             <p>dashboard</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('analytics') }}">
-            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40">
             <p>analytics</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('settings') }}">
-            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40">
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
             <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40"></img>
+                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
                 <p>log-out</p>
             </a>
         </li>
     </ul>
 </nav>
+
+<div class="user_wrapper">
+    <div class="user_container">
+        <div class="profile_header">
+            <div class="profile_picture_container">
+                {% if user.profile_picture %}
+                    <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+                         alt="Profile Picture" 
+                         class="profile_picture" 
+                         id="profileImg">
+                {% else %}
+                    <div class="default_avatar" id="defaultAvatar">
+                        {{ user.nume[0].upper() }}{{ user.prenume[0].upper() }}
+                    </div>
+                {% endif %}
+                <div class="profile_picture_overlay">
+                    <div class="loading_spinner" id="loadingSpinner"></div>
+                    <button onclick="document.getElementById('fileInput').click()" id="changeBtn">schimbă</button>
+                    {% if user.profile_picture %}
+                    <button onclick="removeProfilePicture()" id="removeBtn">șterge</button>
+                    {% endif %}
+                </div>
+                <input type="file" id="fileInput" accept="image/*" onchange="uploadProfilePicture(this)">
+            </div>
+            
+            <div class="profile_info">
+                <h1 class="profile_name">{{ user.nume }} {{ user.prenume }}</h1>
+                {% if user.bio %}
+                <p class="profile_bio">{{ user.bio }}</p>
+                {% else %}
+                <p class="profile_bio">nicio descriere adăugată</p>
+                {% endif %}
+                <div class="profile_stats">
+                    <div class="stat_item">
+                        <div class="stat_value">{{ user.an }}</div>
+                        <div class="stat_label">anul</div>
+                    </div>
+                    <div class="stat_item">
+                        <div class="stat_value">
+                            {% if medie %}
+                                {{ "%.2f"|format(medie) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                        <div class="stat_label">media</div>
+                    </div>
+                    <div class="stat_item">
+                        <div class="stat_value">{{ total_materii if total_materii else 0 }}</div>
+                        <div class="stat_label">examene</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details_section">
+            <h2 class="section_title">informații personale</h2>
+            <div class="details_grid">
+                <div class="detail_item">
+                    <span class="detail_label">email</span>
+                    <span class="detail_value">{{ user.email }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">telefon</span>
+                    <span class="detail_value">{{ user.telefon if user.telefon else 'necompletat' }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">data nașterii</span>
+                    <span class="detail_value">{{ user.data_nasterii if user.data_nasterii else 'necompletată' }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">status cont</span>
+                    <span class="detail_value" style="color: #99FF99;">{{ 'confirmat' if user.confirmed else 'neconfirmat' }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details_section">
+            <h2 class="section_title">informații academice</h2>
+            <div class="details_grid">
+                <div class="detail_item">
+                    <span class="detail_label">facultate</span>
+                    <span class="detail_value">{{ facultate_display }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">specializare</span>
+                    <span class="detail_value">{{ user.specializare }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">anul de studiu</span>
+                    <span class="detail_value">anul {{ user.an }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">media generală</span>
+                    <span class="detail_value">
+                        {% if medie %}
+                            {{ "%.2f"|format(medie) }}
+                        {% else %}
+                            nu există note
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function uploadProfilePicture(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert('fișierul este prea mare! maximum 5MB.');
+            return;
+        }
+        
+        document.getElementById('loadingSpinner').style.display = 'block';
+        document.getElementById('changeBtn').style.display = 'none';
+        const removeBtn = document.getElementById('removeBtn');
+        if (removeBtn) removeBtn.style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+        
+        fetch('/upload_profile_picture', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.msg || 'eroare la încărcarea imaginii');
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('changeBtn').style.display = 'block';
+                if (removeBtn) removeBtn.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            alert('eroare la încărcarea imaginii');
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('changeBtn').style.display = 'block';
+            if (removeBtn) removeBtn.style.display = 'block';
+        });
+    }
+}
+
+function removeProfilePicture() {
+    if (confirm('sigur vrei să ștergi poza de profil?')) {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        document.getElementById('changeBtn').style.display = 'none';
+        document.getElementById('removeBtn').style.display = 'none';
+        
+        fetch('/remove_profile_picture', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('eroare la ștergerea imaginii');
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('changeBtn').style.display = 'block';
+                document.getElementById('removeBtn').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            alert('eroare la ștergerea imaginii');
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('changeBtn').style.display = 'block';
+            document.getElementById('removeBtn').style.display = 'block';
+        });
+    }
+}
+</script>
 {% endblock %}
