@@ -2,93 +2,193 @@
 
 {% block head %}
 <title>dashboard | studentxyz</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/style_dashboard.css')}}">
 {% endblock %}
 
 {% block body %}
 <script>
     const specializare = '{{ specializare }}';
     const note = {{ note|tojson|safe }};
+    const anCurent = {{ an_curent }};
+    const semestruCurent = {{ semestru_curent }};
+    
+    console.log('Template values:', {
+        specializare: specializare,
+        anCurent: anCurent,
+        semestruCurent: semestruCurent,
+        anCurentType: typeof anCurent,
+        semestruCurentType: typeof semestruCurent
+    });
 </script>
 <script src="{{ url_for('static', filename='java_script/script_dashboard.js') }}"></script>
+
 <nav class="nav nav_closed">
     <div class="nav_expand">
-        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
+        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40">
     </div>
     <ul class="nav_list">
-        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100"></img>
+        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100">
         <li class="nav_listitem"><a href="{{ url_for('user') }}">
-            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40">
             <p>profil personal</p>
         </a></li>
         <li class="nav_listitem nav_listitem-active"><a href="{{ url_for('dashboard') }}">
-            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40">
             <p>dashboard</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('analytics') }}">
-            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40">
             <p>analytics</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('settings') }}">
-            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40">
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
             <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40"></img>
+                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
                 <p>log-out</p>
             </a>
         </li>
     </ul>
 </nav>
+
 <div class="dashboard_wrapper">
-<div class="dashboard_content">
-    <div class="dashboard_headers">
-        <h1 class="glow">anul</h1>
-        <h1 contenteditable="true" class="an glow">1</h1>
-        <h1 class="glow">:</h1>
-        <h1 class="glow">semestrul</h1>
-        <h1 contenteditable="true" class="semestru glow">1</h1>
-        <h1 class="glow mobile-hide-dash"> - {{ specializare }}</h1>
+    <div class="dashboard_container">
+        <div class="semester_selector">
+            <div class="selector_card">
+                <h2 class="selector_title">selectează perioada</h2>
+                <div class="selector_controls">
+                    <div class="selector_group">
+                        <label class="selector_label">anul</label>
+                        <select id="yearSelect" class="selector_select">
+                            <option value="1">anul 1</option>
+                            <option value="2">anul 2</option>
+                            <option value="3">anul 3</option>
+                        </select>
+                    </div>
+                    <div class="selector_group">
+                        <label class="selector_label">semestrul</label>
+                        <select id="semesterSelect" class="selector_select">
+                            <option value="1">semestrul 1</option>
+                            <option value="2">semestrul 2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grades_section">
+            <div class="section_header">
+                <h2 class="section_title">
+                    <span id="currentPeriodTitle">anul 1, semestrul 1</span>
+                    <span class="section_subtitle">{{ specializare }}</span>
+                </h2>
+                <div class="section_stats">
+                    <div class="stat_item">
+                        <span class="stat_value" id="avgGrade">-</span>
+                        <span class="stat_label">medie</span>
+                    </div>
+                    <div class="stat_item">
+                        <span class="stat_value" id="totalCredits">0</span>
+                        <span class="stat_label">credite</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grades_table_container">
+                <table class="grades_table" id="gradesTable">
+                    <thead>
+                        <tr>
+                            <th>materie</th>
+                            <th>credite</th>
+                            <th>notă</th>
+                            <th>status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradesTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="prediction_section" id="predictionSection" style="display: none;">
+            <div class="section_header">
+                <h2 class="section_title">
+                    <span id="predictionPeriodTitle">🔮 predicții pentru următorul semestru</span>
+                    <span class="section_subtitle">vrei să vezi cum te vei descurca semestrul viitor?</span>
+                </h2>
+                <div class="section_stats">
+                    <div class="stat_item">
+                        <span class="stat_value" id="predictionConfidence">-</span>
+                        <span class="stat_label">încredere</span>
+                    </div>
+                    <div class="stat_item">
+                        <span class="stat_value" id="predictedAverage">-</span>
+                        <span class="stat_label">medie prezisă</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prediction_controls">
+                <button id="generatePredictions" class="prediction_btn">
+                    <span class="btn_icon">✨</span>
+                    <span class="btn_text">generează predicții</span>
+                </button>
+                <div class="prediction_info">
+                    <span class="info_text">predicțiile se bazează pe performanța ta curentă și corelațiile între materii</span>
+                </div>
+            </div>
+
+            <div class="prediction_results" id="predictionResults" style="display: none;">
+                <div class="grades_table_container">
+                    <table class="grades_table prediction_table">
+                        <thead>
+                            <tr>
+                                <th>materie</th>
+                                <th>credite</th>
+                                <th>notă prezisă</th>
+                                <th>încredere</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="prediction_disclaimer" style="margin-top: 20px;">
+                    <h5>⚠️ atenție ⚠️</h5>
+                    <p>predicțiile sunt doar estimări bazate pe datele istorice și performanța ta curentă. rezultatele reale pot varia în funcție de efortul depus, dificultatea examenelor și alți factori.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick_stats">
+            <div class="stats_card">
+                <div class="stats_icon passed">✓</div>
+                <div class="stats_info">
+                    <span class="stats_number" id="passedCount">0</span>
+                    <span class="stats_text">examene promovate</span>
+                </div>
+            </div>
+            <div class="stats_card">
+                <div class="stats_icon failed">✗</div>
+                <div class="stats_info">
+                    <span class="stats_number" id="failedCount">0</span>
+                    <span class="stats_text">restanțe</span>
+                </div>
+            </div>
+            <div class="stats_card">
+                <div class="stats_icon pending">⏳</div>
+                <div class="stats_info">
+                    <span class="stats_number" id="pendingCount">0</span>
+                    <span class="stats_text">în așteptare</span>
+                </div>
+            </div>
+        </div>
     </div>
-    <table class="dashboard_table">
-        <thead>
-            <tr>
-                <th style="color: white;">materie</th>
-                <th style="color: white;">notă examen</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="2" style="text-align:center;">nu există date pentru acest an/semestru</td>
-            </tr>
-        </tbody>
-    </table>
 </div>
-<div class="dashboard_button_wrapper">
-    <button class="ml_button">⇄</button>
-</div>
-<div class="dashboard_content">
-    <div class="dashboard_headers">
-        <h1 class="glow">anul</h1>
-        <h1 class="an glow">1</h1>
-        <h1 class="glow">:</h1>
-        <h1 class="glow">semestrul</h1>
-        <h1 class="semestru glow">2</h1>
-        <h1 class="glow mobile-hide-dash"> - {{ specializare }}</h1>
-    </div>
-    <table class="dashboard_table">
-        <thead>
-            <tr>
-                <th style="color: white;">materie</th>
-                <th style="color: white;">notă examen</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="2" style="text-align:center;">nu există date pentru acest an/semestru</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-</div>
+
+<div id="toast" class="toast"></div>
+
 {% endblock %}
