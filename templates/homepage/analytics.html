@@ -2,37 +2,270 @@
 
 {% block head %}
 <title>analytics | studentxyz</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/style_analytics.css')}}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block body %}
 <nav class="nav nav_closed">
     <div class="nav_expand">
-        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
+        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40">
     </div>
     <ul class="nav_list">
-        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100"></img>
+        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100">
         <li class="nav_listitem"><a href="{{ url_for('user') }}">
-            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40">
             <p>profil personal</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('dashboard') }}">
-            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40">
             <p>dashboard</p>
         </a></li>
         <li class="nav_listitem nav_listitem-active"><a href="{{ url_for('analytics') }}">
-            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40">
             <p>analytics</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('settings') }}">
-            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40">
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
             <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40"></img>
+                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
                 <p>log-out</p>
             </a>
         </li>
     </ul>
 </nav>
+
+<div class="analytics_wrapper">
+    <div class="analytics_container">
+        <div class="stats_overview">
+            <div class="stat_card highlight">
+                <div class="stat_icon">📊</div>
+                <div class="stat_content">
+                    <span class="stat_value">{{ weighted_average if weighted_average else '-' }}</span>
+                    <span class="stat_label">media ponderată</span>
+                </div>
+            </div>
+            <div class="stat_card">
+                <div class="stat_icon">🎓</div>
+                <div class="stat_content">
+                    <span class="stat_value">{{ total_credits_earned }}</span>
+                    <span class="stat_label">credite obținute</span>
+                </div>
+            </div>
+            <div class="stat_card">
+                <div class="stat_icon">✅</div>
+                <div class="stat_content">
+                    <span class="stat_value">{{ subjects_passed }}</span>
+                    <span class="stat_label">examene promovate</span>
+                </div>
+            </div>
+            <div class="stat_card">
+                <div class="stat_icon">📚</div>
+                <div class="stat_content">
+                    <span class="stat_value">{{ subjects_failed }}</span>
+                    <span class="stat_label">restanțe</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts_row">
+            <div class="chart_card">
+                <h3 class="chart_title">distribuția notelor</h3>
+                <div class="chart_container">
+                    <canvas id="gradeDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart_card">
+                <h3 class="chart_title">evoluția mediei pe semestre</h3>
+                <div class="chart_container">
+                    <canvas id="semesterProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+<div class="performance_section">
+    <h2 class="section_title">analiză performanță</h2>
+    <div class="performance_grid">
+        <div class="performance_card">
+            <h4>cel mai bun semestru</h4>
+            <div class="performance_value">
+                {% if best_semester and best_avg %}
+                    <span class="highlight">{{ best_semester }}</span>
+                    <span class="subtext">media: {{ best_avg }}</span>
+                {% else %}
+                    <span class="subtext">nu există date</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="performance_card">
+            <h4>rata de promovare</h4>
+            <div class="performance_value">
+                {% if total_subjects > 0 %}
+                    <span class="highlight">{{ pass_rate }}%</span>
+                    <span class="subtext">{{ subjects_passed }} din {{ total_subjects }}</span>
+                {% else %}
+                    <span class="subtext">nu există date</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="performance_card">
+            <h4>progres credite</h4>
+            <div class="performance_value">
+                <span class="highlight">{{ total_credits_earned }}/180</span>
+                <div class="progress_bar">
+                    <div class="progress_fill" style="width: {{ (total_credits_earned / 180 * 100)|round(1) }}%"></div>
+                </div>
+                <span class="subtext">{{ ((total_credits_earned / 180) * 100)|round(1) }}% completat</span>
+            </div>
+        </div>
+    </div>
+</div>
+        <div class="detailed_stats">
+            <h2 class="section_title">statistici detaliate pe semestre</h2>
+            <div class="stats_table_container">
+                <table class="stats_table">
+                    <thead>
+                        <tr>
+                            <th>semestru</th>
+                            <th>media</th>
+                            <th>examene</th>
+                            <th>status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sem, avg in semester_averages.items() %}
+                        <tr>
+                            <td>{{ sem }}</td>
+                            <td><span class="grade_badge">{{ avg }}</span></td>
+                            <td>-</td>
+                            <td>
+                                {% if avg >= 5 %}
+                                    <span class="status_badge passed">promovat</span>
+                                {% else %}
+                                    <span class="status_badge failed">nepromovat</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not semester_averages %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem;">nu există date disponibile</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const gradeDistCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+const gradeDistribution = {{ grade_distribution|tojson }};
+const gradeLabels = Object.keys(gradeDistribution).map(k => `Nota ${k}`);
+const gradeValues = Object.values(gradeDistribution);
+
+new Chart(gradeDistCtx, {
+    type: 'bar',
+    data: {
+        labels: gradeLabels,
+        datasets: [{
+            label: 'Număr note',
+            data: gradeValues,
+            backgroundColor: 'rgba(153, 255, 153, 0.6)',
+            borderColor: 'rgba(153, 255, 153, 1)',
+            borderWidth: 2,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#aaa',
+                    stepSize: 1
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#aaa'
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+const semProgressCtx = document.getElementById('semesterProgressChart').getContext('2d');
+const semesterAverages = {{ semester_averages|tojson }};
+const semLabels = Object.keys(semesterAverages);
+const semValues = Object.values(semesterAverages);
+
+new Chart(semProgressCtx, {
+    type: 'line',
+    data: {
+        labels: semLabels,
+        datasets: [{
+            label: 'Media',
+            data: semValues,
+            borderColor: 'rgba(153, 255, 153, 1)',
+            backgroundColor: 'rgba(153, 255, 153, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgba(153, 255, 153, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 10,
+                ticks: {
+                    color: '#aaa'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#aaa'
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+</script>
+
 {% endblock %}

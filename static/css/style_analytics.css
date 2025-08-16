@@ -1,0 +1,333 @@
+.analytics_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 2rem;
+    margin-left: 26rem;
+    transition: margin-left 0.3s ease;
+}
+
+.nav_closed ~ .analytics_wrapper {
+    margin-left: 6rem;
+}
+
+.analytics_container {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.stats_overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat_card {
+    background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat_card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.stat_card.highlight {
+    background: linear-gradient(135deg, rgba(153, 255, 153, 0.1) 0%, rgba(102, 204, 102, 0.1) 100%);
+    border-color: rgba(153, 255, 153, 0.3);
+}
+
+.stat_icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.stat_content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat_value {
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.stat_label {
+    font-size: 0.9rem;
+    color: #aaa;
+    text-transform: lowercase;
+    margin-top: 0.25rem;
+}
+
+.charts_row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart_card {
+    background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chart_title {
+    font-size: 1.2rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    text-transform: lowercase;
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chart_container {
+    height: 250px;
+    position: relative;
+}
+
+.performance_section {
+    background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section_title {
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    text-transform: lowercase;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.section_title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #99FF99, transparent);
+    border-radius: 2px;
+}
+
+.performance_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.performance_card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.performance_card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+}
+
+.performance_card h4 {
+    color: #aaa;
+    font-size: 0.9rem;
+    text-transform: lowercase;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.performance_value {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.performance_value .highlight {
+    font-size: 1.8rem;
+    color: #99FF99;
+    font-weight: bold;
+}
+
+.performance_value .subtext {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.progress_bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress_fill {
+    height: 100%;
+    background: linear-gradient(90deg, #99FF99, #66CC66);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.detailed_stats {
+    background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats_table_container {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.stats_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats_table thead {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.stats_table th {
+    padding: 1rem;
+    text-align: left;
+    color: #99FF99;
+    font-weight: 600;
+    text-transform: lowercase;
+    font-size: 0.95rem;
+    border-bottom: 2px solid rgba(153, 255, 153, 0.2);
+}
+
+.stats_table tbody tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stats_table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stats_table td {
+    padding: 1rem;
+    color: white;
+    font-size: 0.95rem;
+}
+
+.grade_badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(153, 255, 153, 0.2);
+    color: #99FF99;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status_badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: lowercase;
+}
+
+.status_badge.passed {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.status_badge.failed {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+@media (max-width: 768px) {
+    .analytics_wrapper {
+        margin-left: 0;
+        margin-top: 60px;
+        padding: 1rem;
+        transition: none;
+    }
+    
+    .stats_overview {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .charts_row {
+        grid-template-columns: 1fr;
+    }
+    
+    .performance_grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat_card {
+        padding: 1rem;
+    }
+    
+    .stat_icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .stat_value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats_overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart_container {
+        height: 200px;
+    }
+    
+    .performance_value .highlight {
+        font-size: 1.5rem;
+    }
+    
+    .stats_table {
+        font-size: 0.85rem;
+    }
+    
+    .stats_table th,
+    .stats_table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
