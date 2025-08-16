@@ -2,37 +2,197 @@
 
 {% block head %}
 <title>setări | studentxyz</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/style_settings.css')}}">
+<script src="{{ url_for('static', filename='java_script/script_settings.js') }}"></script>
 {% endblock %}
 
 {% block body %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <nav class="nav nav_closed">
     <div class="nav_expand">
-        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40"></img>
+        <img class="invert" src="{{url_for('static', filename='css/expand.svg')}}" width="40" height="40">
     </div>
     <ul class="nav_list">
-        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100"></img>
+        <img class="nav_logo glow" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="400" height="100">
         <li class="nav_listitem"><a href="{{ url_for('user') }}">
-            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/user.svg')}}" width="40" height="40">
             <p>profil personal</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('dashboard') }}">
-            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/dashboard.svg')}}" width="40" height="40">
             <p>dashboard</p>
         </a></li>
         <li class="nav_listitem"><a href="{{ url_for('analytics') }}">
-            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/analytics.svg')}}" width="40" height="40">
             <p>analytics</p>
         </a></li>
         <li class="nav_listitem nav_listitem-active"><a href="{{ url_for('settings') }}">
-            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40"></img>
+            <img class="invert" src="{{url_for('static', filename='css/settings.svg')}}" width="40" height="40">
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
             <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40"></img>
+                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
                 <p>log-out</p>
             </a>
         </li>
     </ul>
 </nav>
+
+<div class="settings_wrapper">
+    <div class="settings_container">
+        <div class="settings_section">
+            <h2 class="section_header">informații personale</h2>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="action" value="update_profile">
+                
+                <div class="form_row">
+                    <div class="form_group">
+                        <label class="form_label">nume</label>
+                        <input type="text" name="nume" class="form_input" value="{{ user.nume }}" required>
+                    </div>
+                    <div class="form_group">
+                        <label class="form_label">prenume</label>
+                        <input type="text" name="prenume" class="form_input" value="{{ user.prenume }}" required>
+                    </div>
+                </div>
+                
+                <div class="form_group">
+                    <label class="form_label">bio</label>
+                    <textarea name="bio" class="form_textarea" placeholder="spune ceva despre tine...">{{ user.bio if user.bio }}</textarea>
+                </div>
+                
+                <div class="form_row">
+                    <div class="form_group">
+                        <label class="form_label">telefon</label>
+                        <input type="tel" name="telefon" class="form_input" value="{{ user.telefon if user.telefon }}" placeholder="07xxxxxxxx">
+                    </div>
+                    <div class="form_group">
+                        <label class="form_label">data nașterii</label>
+                        <input type="date" name="data_nasterii" class="form_input" value="{{ user.data_nasterii if user.data_nasterii }}">
+                    </div>
+                </div>
+                
+                <div class="btn_group">
+                    <button type="submit" class="btn btn_primary">salvează modificările</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings_section">
+            <h2 class="section_header">informații academice</h2>
+            <div class="alert alert_info">
+                schimbarea specializării va păstra doar notele pentru materiile comune între specializări
+            </div>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="action" value="update_academic">
+                
+                <div class="form_group">
+                    <label class="form_label">facultate</label>
+                    <select name="facultate" id="facultate" class="form_select" required>
+                        <option value="csie" {% if user.facultate == 'csie' %}selected{% endif %}>facultatea de cibernetică, statistică și informatică economică</option>
+                        <option value="finante" {% if user.facultate == 'finante' %}selected{% endif %}>facultatea de finanțe, asigurări, bănci și burse de valori</option>
+                        <option value="marketing" {% if user.facultate == 'marketing' %}selected{% endif %}>facultatea de marketing</option>
+                        <option value="comert" {% if user.facultate == 'comert' %}selected{% endif %}>facultatea de comerț</option>
+                        <option value="economie" {% if user.facultate == 'economie' %}selected{% endif %}>facultatea de economie teoretică și aplicată</option>
+                        <option value="contabilitate" {% if user.facultate == 'contabilitate' %}selected{% endif %}>facultatea de contabilitate și informatică de gestiune</option>
+                        <option value="management" {% if user.facultate == 'management' %}selected{% endif %}>facultatea de management</option>
+                        <option value="rei" {% if user.facultate == 'rei' %}selected{% endif %}>facultatea de relații economice internaționale</option>
+                        <option value="fabiz" {% if user.facultate == 'fabiz' %}selected{% endif %}>facultatea de administrarea afacerilor în limbi străine (fabiz)</option>
+                    </select>
+                </div>
+                
+                <div class="form_group">
+                    <label class="form_label">specializare</label>
+                    <select name="specializare" id="specializare" class="form_select" required>
+                    </select>
+                </div>
+                
+                <div class="form_row">
+                    <div class="form_group">
+                        <label class="form_label">an de studiu</label>
+                        <select name="an" class="form_select" required>
+                            <option value="1" {% if user.an == '1' %}selected{% endif %}>anul 1</option>
+                            <option value="2" {% if user.an == '2' %}selected{% endif %}>anul 2</option>
+                            <option value="3" {% if user.an == '3' %}selected{% endif %}>anul 3</option>
+                        </select>
+                    </div>
+                    <div class="form_group">
+                        <label class="form_label">semestru curent</label>
+                        <select name="semestru_curent" class="form_select" required>
+                            <option value="1" {% if user.semestru_curent == '1' %}selected{% endif %}>semestrul 1</option>
+                            <option value="2" {% if user.semestru_curent == '2' %}selected{% endif %}>semestrul 2</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn_group">
+                    <button type="submit" class="btn btn_primary">actualizează informațiile</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings_section">
+            <h2 class="section_header">schimbă parola</h2>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form_group">
+                    <label class="form_label">parola curentă</label>
+                    <input type="password" name="current_password" class="form_input" required>
+                </div>
+                
+                <div class="form_row">
+                    <div class="form_group">
+                        <label class="form_label">parola nouă</label>
+                        <input type="password" name="new_password" class="form_input" required minlength="6">
+                    </div>
+                    <div class="form_group">
+                        <label class="form_label">confirmă parola nouă</label>
+                        <input type="password" name="confirm_password" class="form_input" required minlength="6">
+                    </div>
+                </div>
+                
+                <div class="btn_group">
+                    <button type="submit" class="btn btn_danger">schimbă parola</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings_section">
+            <h2 class="section_header">schimbă email-ul</h2>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="action" value="change_email">
+                
+                <div class="form_group">
+                    <label class="form_label">email nou</label>
+                    <input type="email" name="new_email" class="form_input" placeholder="nume@stud.ase.ro" required>
+                </div>
+                
+                <div class="form_group">
+                    <label class="form_label">confirmă cu parola ta</label>
+                    <input type="password" name="password_for_email" class="form_input" required>
+                </div>
+                
+                <div class="btn_group">
+                    <button type="submit" class="btn btn_warning">schimbă email-ul</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const currentSpecialization = "{{ user.specializare }}";
+</script>
+
 {% endblock %}

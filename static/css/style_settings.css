@@ -1,0 +1,310 @@
+.settings_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 2rem;
+    margin-left: 26rem;
+}
+
+.nav_closed ~ .settings_wrapper {
+    margin-left: 6rem;
+}
+
+.settings_container {
+    width: 100%;
+    max-width: 800px;
+}
+
+.settings_section {
+    background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.settings_section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.section_header {
+    font-size: 1.6rem;
+    color: white;
+    margin-bottom: 2rem;
+    text-transform: lowercase;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.section_header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #99FF99, transparent);
+    border-radius: 2px;
+}
+
+.form_group {
+    margin-bottom: 1.75rem;
+}
+
+.form_label {
+    display: block;
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    text-transform: lowercase;
+    font-weight: 500;
+}
+
+.form_input, .form_select, .form_textarea {
+    width: 100%;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form_textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form_input:focus, .form_select:focus, .form_textarea:focus {
+    outline: none;
+    border-color: #99FF99;
+    background-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 20px rgba(153, 255, 153, 0.3);
+    transform: translateY(-1px);
+}
+
+.form_input::placeholder, .form_textarea::placeholder {
+    color: #888;
+}
+
+.form_row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.btn_group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: flex-start;
+}
+
+.btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn_primary {
+    background: linear-gradient(135deg, #99FF99, #66CC66);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(153, 255, 153, 0.4);
+}
+
+.btn_primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(153, 255, 153, 0.6);
+}
+
+.btn_secondary {
+    background-color: rgb(60, 60, 60);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn_secondary:hover {
+    background-color: rgb(70, 70, 70);
+    transform: translateY(-2px);
+}
+
+.btn_danger {
+    background: linear-gradient(135deg, #FF8A8A, #FF6B6B);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(255, 138, 138, 0.4);
+}
+
+.btn_danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 138, 138, 0.6);
+}
+
+.btn_warning {
+    background: linear-gradient(135deg, #FFD93D, #FFB84D);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+}
+
+.btn_warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 217, 61, 0.6);
+}
+
+.alert {
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border-left: 4px solid;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.alert_info {
+    color: #64B5F6;
+    border-left-color: #2196F3;
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    background: rgba(33, 150, 243, 0.1);
+}
+
+.alert_warning {
+    color: #FF8A8A;
+    border-left-color: #FF8A8A;
+    border: 1px solid rgba(255, 138, 138, 0.3);
+}
+
+.flash-messages {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.flash-error {
+    background: linear-gradient(135deg, #ff4444, #cc3333);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+    animation: slideIn 0.3s ease;
+}
+
+.flash-success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+    animation: slideIn 0.3s ease;
+}
+
+.flash-info {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.form_select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+    padding-right: 3rem;
+}
+
+.form_select:focus {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2399FF99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+@media (max-width: 768px) {
+    .settings_container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    }
+
+    .settings_wrapper {
+        margin-left: 0;
+        margin-top: 60px;
+        padding: 1rem;
+    }
+    
+    .settings_section {
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        transition: none;
+    }
+    
+    .form_row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .btn_group {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .section_header {
+        font-size: 1.4rem;
+    }
+    
+    .flash-messages {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+    }
+}
