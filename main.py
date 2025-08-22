@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify, send_from_directory
+from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify, send_from_directory, abort
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,14 +12,22 @@ import sqlite3
 import random
 import string
 import json
+import secrets
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(32)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+# Harden session cookies
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if os.getenv('FORCE_SECURE_COOKIES', 'true').lower() == 'true':
+    app.config['SESSION_COOKIE_SECURE'] = True
 
 UPLOAD_FOLDER = 'uploads/profile_pictures'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -41,6 +49,89 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 with app.app_context():
     db.init_app(app)
     db.create_all()
+
+# ========================= Security Utilities =========================
+RATE_LIMIT_WINDOW = 300  # seconds
+MAX_LOGIN_ATTEMPTS = 10
+_login_attempts = {}
+
+def _cleanup_attempts():
+    now = time.time()
+    expired = [ip for ip, data in _login_attempts.items() if now - data['first'] > RATE_LIMIT_WINDOW]
+    for ip in expired:
+        _login_attempts.pop(ip, None)
+
+def _record_login_attempt(ip, success):
+    _cleanup_attempts()
+    data = _login_attempts.get(ip, {'count': 0, 'first': time.time()})
+    if success:
+        data = {'count': 0, 'first': time.time()}
+    else:
+        data['count'] += 1
+    _login_attempts[ip] = data
+
+def _is_rate_limited(ip):
+    _cleanup_attempts()
+    data = _login_attempts.get(ip)
+    return data and data['count'] >= MAX_LOGIN_ATTEMPTS
+
+CSRF_HEADER = 'X-CSRF-Token'
+
+def _ensure_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return session['csrf_token']
+
+@app.before_request
+def _apply_csrf_and_headers():
+    _ensure_csrf_token()
+    # Skip CSRF for safe methods
+    if request.method in ('GET', 'HEAD', 'OPTIONS'):
+        return
+    # Exempt token confirmation routes
+    exempt = {'confirm_email', 'confirm_email_change'}
+    if request.endpoint in exempt:
+        return
+    token = request.headers.get(CSRF_HEADER)
+    if not token:
+        if request.is_json:
+            token = (request.get_json(silent=True) or {}).get('csrf_token')
+        else:
+            token = request.form.get('csrf_token')
+    if not token or token != session.get('csrf_token'):
+        return abort(400, description='Invalid or missing CSRF token')
+
+@app.after_request
+def _security_headers(resp):
+    resp.headers.setdefault('Content-Security-Policy', "default-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://i.imgur.com; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('X-Frame-Options', 'DENY')
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    resp.headers.setdefault('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+    return resp
+
+@app.context_processor
+def _inject_csrf():
+    return {'csrf_token': _ensure_csrf_token()}
+
+# SEO context (canonical & defaults)
+@app.context_processor
+def _inject_seo():
+    from flask import request
+    base_url = os.getenv('BASE_URL', 'https://studentxyz.example')
+    try:
+        # Ensure external URL for og:image
+        og_image = url_for('static', filename='css/icon.png', _external=True)
+    except Exception:
+        og_image = base_url.rstrip('/') + '/static/css/icon.png'
+    canonical_url = base_url.rstrip('/') + (request.path if request.path != '/' else '/')
+    return {
+        'canonical_url': canonical_url,
+        'og_image_url': og_image,
+        'default_meta_title': 'studentxyz',
+        'default_meta_description': 'platformă academică sigură pentru gestionarea notelor și analiză de performanță a studenților ASE.',
+        'site_name': 'studentxyz'
+    }
 
 def is_physical_education(materie):
     return 'educație fizică' in materie.lower() or 'educatie fizica' in materie.lower()
@@ -511,7 +602,7 @@ def get_detailed_stats(user_id):
         'pass_rate': pass_rate
     }
 
-def generate_random_password(length=8):
+def generate_random_password(length=12):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
@@ -525,21 +616,26 @@ def login():
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
+            flash('prea multe încercări. încearcă din nou mai târziu.', 'error')
+            return redirect(url_for('login'))
         email = request.form.get('email')
         password = request.form.get('password')
-        
         user = User.query.filter_by(email=email).first()
-        
         if user and check_password_hash(user.password, password):
             if not user.confirmed:
                 flash('contul nu este confirmat. verifică-ți emailul pentru a-l confirma.', 'error')
+                _record_login_attempt(ip, False)
                 return redirect(url_for('login'))
             session['username'] = user.email
             session['user_id'] = user.id
-            session['specializare'] = user.specializare 
+            session['specializare'] = user.specializare
+            _record_login_attempt(ip, True)
             return redirect(url_for('dashboard'))
         else:
             flash('email sau parolă incorectă', 'error')
+            _record_login_attempt(ip, False)
     
     return render_template('login/login.html')
 
@@ -565,6 +661,9 @@ def signup():
         
         if password != confirm_password:
             flash('parolele nu coincid!', 'error')
+            return redirect(url_for('signup'))
+        if len(password) < 10 or not any(c.islower() for c in password) or not any(c.isupper() for c in password) or not any(c.isdigit() for c in password):
+            flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre.', 'error')
             return redirect(url_for('signup'))
         
         existing_user = User.query.filter_by(email=email).first()
@@ -785,11 +884,12 @@ def save_nota():
     db.session.commit()
     return jsonify({'status': 'success'})
 
-@app.route('/logout')
+@app.route('/logout', methods=['POST'])
 def logout():
     session.pop('username', None)
     session.pop('user_id', None)
     session.pop('specializare', None)
+    flash('delogat.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
@@ -945,8 +1045,9 @@ def settings():
                 flash('parola curentă este incorectă!', 'error')
             elif new_password != confirm_password:
                 flash('parolele noi nu coincid!', 'error')
-            elif len(new_password) < 6:
-                flash('parola trebuie să aibă cel puțin 6 caractere!', 'error')
+            elif (len(new_password) < 10 or not any(c.islower() for c in new_password) or
+                  not any(c.isupper() for c in new_password) or not any(c.isdigit() for c in new_password)):
+                flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre!', 'error')
             else:
                 user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
                 db.session.commit()
@@ -1129,4 +1230,5 @@ def get_averages():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0')

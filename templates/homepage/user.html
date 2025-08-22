@@ -1,7 +1,9 @@
 {% extends 'base_home.html' %}
 
 {% block head %}
-<title>user | studentxyz</title>
+{% set meta_title = (user.nume ~ ' ' ~ user.prenume ~ ' | profil student | ' ~ site_name) %}
+{% set meta_description = 'profil student: note, informații academice, progres și date personale securizate.' %}
+{% set meta_keywords = 'profil student, medie generală, date academice, note' %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/style_user.css')}}">
 {% endblock %}
 
@@ -29,10 +31,13 @@
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
-            <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
-                <p>log-out</p>
-            </a>
+            <form id="logoutForm" method="POST" action="{{ url_for('logout') }}" style="all: unset; cursor:pointer;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" style="all: unset; display:flex; align-items:center;">
+                    <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
+                    <p>log-out</p>
+                </button>
+            </form>
         </li>
     </ul>
 </nav>
@@ -144,6 +149,7 @@
 </div>
 
 <script>
+window.csrfToken = '{{ csrf_token }}';
 function uploadProfilePicture(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -163,6 +169,7 @@ function uploadProfilePicture(input) {
         
         fetch('/upload_profile_picture', {
             method: 'POST',
+            headers: { 'X-CSRF-Token': window.csrfToken || '' },
             body: formData
         })
         .then(response => response.json())
@@ -192,7 +199,8 @@ function removeProfilePicture() {
         document.getElementById('removeBtn').style.display = 'none';
         
         fetch('/remove_profile_picture', {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'X-CSRF-Token': window.csrfToken || '' }
         })
         .then(response => response.json())
         .then(data => {

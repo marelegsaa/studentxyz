@@ -1,12 +1,17 @@
 {% extends 'base_login.html' %}
 
 {% block head %}
+{% set meta_title = 'resetare parolă | ' ~ site_name %}
+{% set meta_description = 'resetează parola contului tău studentxyz.' %}
+{% set meta_keywords = 'resetare parolă student, parola uitată, securitate cont' %}
+{% set meta_robots = 'noindex, nofollow' %}
 {% endblock %}
 
 {% block body %}
 <section class="container">
     <img style="display: block; margin: 0 auto;" class="glow logo" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63">
     <form id="formularemail" class="info" method="POST" action="{{ url_for('reset') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
         <div class="input-section">
             <input id="email" name="email" type="email" placeholder="nume@stud.ase.ro" required class="input">
         </div>

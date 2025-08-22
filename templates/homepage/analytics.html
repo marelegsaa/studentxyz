@@ -1,7 +1,9 @@
 {% extends 'base_home.html' %}
 
 {% block head %}
-<title>analytics | studentxyz</title>
+{% set meta_title = 'analytics performanță | ' ~ site_name %}
+{% set meta_description = 'analiză detaliată a distribuției notelor, evoluției pe semestre și progresului creditelor.' %}
+{% set meta_keywords = 'analytics note, distribuție note, progres semestre, performanță academică' %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/style_analytics.css')}}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
@@ -30,10 +32,13 @@
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
-            <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
-                <p>log-out</p>
-            </a>
+            <form id="logoutForm" method="POST" action="{{ url_for('logout') }}" style="all: unset; cursor:pointer;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" style="all: unset; display:flex; align-items:center;">
+                    <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
+                    <p>log-out</p>
+                </button>
+            </form>
         </li>
     </ul>
 </nav>
