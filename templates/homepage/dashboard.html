@@ -1,7 +1,9 @@
 {% extends 'base_home.html' %}
 
 {% block head %}
-<title>dashboard | studentxyz</title>
+{% set meta_title = 'dashboard academic | ' ~ site_name %}
+{% set meta_description = 'vizualizează și editează notele pe semestre, credite și predicții viitoare.' %}
+{% set meta_keywords = 'dashboard note, credite, predicții, semestre, student' %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/style_dashboard.css')}}">
 {% endblock %}
 
@@ -45,10 +47,13 @@
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
-            <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
-                <p>log-out</p>
-            </a>
+            <form id="logoutForm" method="POST" action="{{ url_for('logout') }}" style="all: unset; cursor:pointer;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" style="all: unset; display:flex; align-items:center;">
+                    <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
+                    <p>log-out</p>
+                </button>
+            </form>
         </li>
     </ul>
 </nav>

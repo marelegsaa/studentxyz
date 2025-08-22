@@ -1,0 +1,6 @@
+{# Macro pentru script tag cu nonce #}
+{% macro script_nonce() -%}
+<script nonce="{{ csp_nonce }}" type="application/javascript">
+// placeholder to ensure CSP nonce recognized; remove if unused
+</script>
+{%- endmacro %}

@@ -1,7 +1,9 @@
 {% extends 'base_home.html' %}
 
 {% block head %}
-<title>setări | studentxyz</title>
+{% set meta_title = 'setări profil | ' ~ site_name %}
+{% set meta_description = 'actualizează informațiile personale, academice și securitatea contului.' %}
+{% set meta_keywords = 'setări cont, schimbă parola, profil student, specializare' %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/style_settings.css')}}">
 <script src="{{ url_for('static', filename='java_script/script_settings.js') }}"></script>
 {% endblock %}
@@ -40,10 +42,13 @@
             <p>setări</p>
         </a></li>
         <li class="nav_listitem nav_logoutitem">
-            <a href="{{ url_for('logout') }}">
-                <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
-                <p>log-out</p>
-            </a>
+            <form id="logoutForm" method="POST" action="{{ url_for('logout') }}" style="all: unset; cursor:pointer;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" style="all: unset; display:flex; align-items:center;">
+                    <img class="invert" src="{{url_for('static', filename='css/logout.svg')}}" width="40" height="40">
+                    <p>log-out</p>
+                </button>
+            </form>
         </li>
     </ul>
 </nav>
@@ -53,6 +58,7 @@
         <div class="settings_section">
             <h2 class="section_header">informații personale</h2>
             <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="action" value="update_profile">
                 
                 <div class="form_row">
@@ -94,6 +100,7 @@
                 schimbarea specializării va păstra doar notele pentru materiile comune între specializări
             </div>
             <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="action" value="update_academic">
                 
                 <div class="form_group">
@@ -144,6 +151,7 @@
         <div class="settings_section">
             <h2 class="section_header">schimbă parola</h2>
             <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="action" value="change_password">
                 
                 <div class="form_group">
@@ -171,6 +179,7 @@
         <div class="settings_section">
             <h2 class="section_header">schimbă email-ul</h2>
             <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="action" value="change_email">
                 
                 <div class="form_group">

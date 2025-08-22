@@ -3,7 +3,25 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>log-in | studentxyz</title>
+        {% set meta_title = meta_title|default('log-in | ' ~ site_name) %}
+        {% set meta_description = meta_description|default('autentificare în platforma studentxyz - accesează dashboard-ul tău academic.') %}
+        {% set meta_keywords = meta_keywords|default('student, note, autentificare, ase, dashboard, analize') %}
+        {% set meta_robots = meta_robots|default('noindex, nofollow') %}
+        <title>{{ meta_title }}</title>
+        <meta name="description" content="{{ meta_description }}">
+        <meta name="keywords" content="{{ meta_keywords }}">
+        <meta name="robots" content="{{ meta_robots }}">
+        <link rel="canonical" href="{{ canonical_url }}">
+        <meta property="og:site_name" content="{{ site_name }}">
+        <meta property="og:title" content="{{ meta_title }}">
+        <meta property="og:description" content="{{ meta_description }}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ canonical_url }}">
+        <meta property="og:image" content="{{ og_image_url }}">
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="{{ meta_title }}">
+        <meta name="twitter:description" content="{{ meta_description }}">
+        <meta name="twitter:image" content="{{ og_image_url }}">
         <link rel="stylesheet" href="{{url_for('static', filename='css/style_login.css')}}">
         <link rel="icon" href="{{url_for('static', filename='css/icon.png')}}"/>
         <script>

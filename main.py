@@ -1,9 +1,10 @@
-from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify, send_from_directory
+from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify, send_from_directory, abort
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Nota
+from models import db, User, Nota, LoginAttempt
+from sqlalchemy import text
 from validari import MATERII, OPTIUNI_OPTIONALE, CREDITE, CREDITE_OPTIONALE
 from PIL import Image
 import os
@@ -12,14 +13,23 @@ import sqlite3
 import random
 import string
 import json
+import secrets
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(32)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+SESSION_IDLE_TIMEOUT = 1800  # seconds inactivity before session expires
+
+# Harden session cookies
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if os.getenv('FORCE_SECURE_COOKIES', 'true').lower() == 'true':
+    app.config['SESSION_COOKIE_SECURE'] = True
 
 UPLOAD_FOLDER = 'uploads/profile_pictures'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -41,6 +51,138 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 with app.app_context():
     db.init_app(app)
     db.create_all()
+
+    def _auto_migrate_safe():
+        if os.getenv('DISABLE_AUTO_INDEX', 'false').lower() == 'true':
+            return
+        try:
+            # Deduplicate potential duplicates before adding unique index
+            dups = db.session.execute(text(
+                "SELECT user_id, an, semestru, materie, COUNT(*) c FROM nota GROUP BY user_id, an, semestru, materie HAVING c>1"
+            )).fetchall()
+            for user_id, an, sem, materie, _c in dups:
+                rows = db.session.execute(text(
+                    "SELECT id, nota FROM nota WHERE user_id=:u AND an=:a AND semestru=:s AND materie=:m ORDER BY (nota IS NULL), id DESC"
+                ), {'u': user_id, 'a': an, 's': sem, 'm': materie}).fetchall()
+                keep = rows[0][0]
+                delete_ids = [str(r[0]) for r in rows[1:]]
+                if delete_ids:
+                    db.session.execute(text(f"DELETE FROM nota WHERE id IN ({','.join(delete_ids)})"))
+            if dups:
+                db.session.commit()
+            # Create unique index idempotently
+            db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_grade ON nota(user_id, an, semestru, materie)"))
+            db.session.commit()
+        except Exception as e:
+            print(f"[auto-migrate] warning: {e}")
+            db.session.rollback()
+
+    _auto_migrate_safe()
+
+# ========================= Security Utilities =========================
+RATE_LIMIT_WINDOW = 300  # seconds
+MAX_LOGIN_ATTEMPTS = 10
+
+def _record_login_attempt(ip, success):
+    attempt = LoginAttempt.query.filter_by(ip=ip).first()
+    now = time.time()
+    if not attempt:
+        attempt = LoginAttempt(ip=ip, first_timestamp=now, count=0)
+        db.session.add(attempt)
+    if now - attempt.first_timestamp > RATE_LIMIT_WINDOW:
+        attempt.first_timestamp = now
+        attempt.count = 0
+    if success:
+        attempt.count = 0
+        attempt.first_timestamp = now
+    else:
+        attempt.count += 1
+    db.session.commit()
+
+def _is_rate_limited(ip):
+    attempt = LoginAttempt.query.filter_by(ip=ip).first()
+    if not attempt:
+        return False
+    now = time.time()
+    if now - attempt.first_timestamp > RATE_LIMIT_WINDOW:
+        return False
+    return attempt.count >= MAX_LOGIN_ATTEMPTS
+
+CSRF_HEADER = 'X-CSRF-Token'
+
+def _ensure_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return session['csrf_token']
+
+@app.before_request
+def _apply_csrf_and_headers():
+    # Idle timeout
+    now = time.time()
+    last = session.get('last_activity')
+    if last and now - last > SESSION_IDLE_TIMEOUT:
+        session.clear()
+        flash('sesiune expirată din cauza inactivității.', 'info')
+        return redirect(url_for('login'))
+    session['last_activity'] = now
+    _ensure_csrf_token()
+    if request.method in ('GET', 'HEAD', 'OPTIONS'):
+        return
+    exempt = {'confirm_email', 'confirm_email_change', 'reset_token'}
+    if request.endpoint in exempt:
+        return
+    token = request.headers.get(CSRF_HEADER)
+    if not token:
+        if request.is_json:
+            token = (request.get_json(silent=True) or {}).get('csrf_token')
+        else:
+            token = request.form.get('csrf_token')
+    if not token or token != session.get('csrf_token'):
+        return abort(400, description='Invalid or missing CSRF token')
+
+@app.after_request
+def _security_headers(resp):
+    nonce = session.get('csp_nonce') or secrets.token_hex(16)
+    session['csp_nonce'] = nonce
+    csp = (
+        "default-src 'self' https://cdn.jsdelivr.net; "
+        "img-src 'self' data: https://i.imgur.com; "
+        f"script-src 'self' https://cdn.jsdelivr.net 'nonce-{nonce}'; "
+        "style-src 'self' https://cdn.jsdelivr.net; "
+        "font-src 'self' data: https://cdn.jsdelivr.net; "
+        "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    )
+    resp.headers.setdefault('Content-Security-Policy', csp)
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('X-Frame-Options', 'DENY')
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    resp.headers.setdefault('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+    if request.host and not request.host.startswith('localhost') and os.getenv('ENABLE_HSTS','true').lower()=='true':
+        resp.headers.setdefault('Strict-Transport-Security','max-age=63072000; includeSubDomains; preload')
+    return resp
+
+@app.context_processor
+def _inject_csrf():
+    return {'csrf_token': _ensure_csrf_token(), 'csp_nonce': session.get('csp_nonce')}
+
+# SEO context (canonical & defaults)
+@app.context_processor
+def _inject_seo():
+    from flask import request
+    base_url = os.getenv('BASE_URL', 'https://studentxyz.example')
+    try:
+        # Ensure external URL for og:image
+        og_image = url_for('static', filename='css/icon.png', _external=True)
+    except Exception:
+        og_image = base_url.rstrip('/') + '/static/css/icon.png'
+    canonical_url = base_url.rstrip('/') + (request.path if request.path != '/' else '/')
+    return {
+        'canonical_url': canonical_url,
+        'og_image_url': og_image,
+        'default_meta_title': 'studentxyz',
+        'default_meta_description': 'platformă academică sigură pentru gestionarea notelor și analiză de performanță a studenților ASE.',
+        'site_name': 'studentxyz'
+    }
 
 def is_physical_education(materie):
     return 'educație fizică' in materie.lower() or 'educatie fizica' in materie.lower()
@@ -511,7 +653,7 @@ def get_detailed_stats(user_id):
         'pass_rate': pass_rate
     }
 
-def generate_random_password(length=8):
+def generate_random_password(length=12):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
@@ -525,21 +667,34 @@ def login():
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
+            flash('prea multe cereri de resetare. încearcă mai târziu.', 'error')
+            return redirect(url_for('login'))
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
+            flash('prea multe încercări. încearcă din nou mai târziu.', 'error')
+            return redirect(url_for('signup'))
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
+            flash('prea multe încercări. încearcă din nou mai târziu.', 'error')
+            return redirect(url_for('login'))
         email = request.form.get('email')
         password = request.form.get('password')
-        
         user = User.query.filter_by(email=email).first()
-        
         if user and check_password_hash(user.password, password):
             if not user.confirmed:
                 flash('contul nu este confirmat. verifică-ți emailul pentru a-l confirma.', 'error')
+                _record_login_attempt(ip, False)
                 return redirect(url_for('login'))
             session['username'] = user.email
             session['user_id'] = user.id
-            session['specializare'] = user.specializare 
+            session['specializare'] = user.specializare
+            _record_login_attempt(ip, True)
             return redirect(url_for('dashboard'))
         else:
             flash('email sau parolă incorectă', 'error')
+            _record_login_attempt(ip, False)
     
     return render_template('login/login.html')
 
@@ -565,6 +720,9 @@ def signup():
         
         if password != confirm_password:
             flash('parolele nu coincid!', 'error')
+            return redirect(url_for('signup'))
+        if len(password) < 10 or not any(c.islower() for c in password) or not any(c.isupper() for c in password) or not any(c.isdigit() for c in password):
+            flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre.', 'error')
             return redirect(url_for('signup'))
         
         existing_user = User.query.filter_by(email=email).first()
@@ -670,46 +828,65 @@ def reset():
     if request.method == 'GET':
         return render_template('login/reset.html')
     if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
+                ip = request.remote_addr or 'unknown'
+                email = request.form.get('email')
+                generic_message = 'dacă emailul există și este confirmat, trimitem instrucțiuni de resetare.'
+                user = User.query.filter_by(email=email).first()
+                _record_login_attempt(ip, False)  # increment attempt regardless
+                if not user:
+                        flash(generic_message, 'info')
+                        return redirect(url_for('login'))
+                token = serializer.dumps({'uid': user.id, 'purpose': 'pwd-reset'}, salt='pwd-reset')
+                reset_url = url_for('reset_token', token=token, _external=True)
+                msg = Message('instrucțiuni resetare parolă', sender=app.config['MAIL_USERNAME'], recipients=[email])
+                msg.body = f"accesază acest link pentru a reseta parola (valabil 30 minute): {reset_url}"
+                msg.html = f"""
+<html><body>
+<div style='font-family: Helvetica, Arial, sans-serif; background:#f4f4f4;padding:20px;'>
+    <div style='max-width:600px;margin:0 auto;background:#ffffff;padding:25px;border-radius:8px;'>
+        <h2 style='margin-top:0;'>resetare parolă</h2>
+        <p>ai solicitat resetarea parolei. dă click pe butonul de mai jos (valabil 30 minute).</p>
+        <p style='text-align:center;margin:30px 0;'>
+            <a href='{reset_url}' style='background:#181818;color:#fff;padding:12px 22px;text-decoration:none;border-radius:6px;font-weight:bold;'>resetează parola</a>
+        </p>
+        <p>ignoră acest email dacă nu ai făcut tu cererea.</p>
+    </div>
+    <p style='text-align:center;font-size:12px;color:#666;margin-top:25px;'>&copy; 2025 marelegsaa</p>
+</div>
+</body></html>
+                """
+                mail.send(msg)
+                _record_login_attempt(ip, True)  # reset counter on success
+                flash(generic_message, 'info')
+                return redirect(url_for('login'))
 
+@app.route('/reset/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    try:
+        data = serializer.loads(token, salt='pwd-reset', max_age=1800)
+        if data.get('purpose') != 'pwd-reset':
+            raise ValueError('purpose')
+        user = User.query.get(data.get('uid'))
         if not user:
-            flash('email-ul nu este înregistrat!', 'error')
-            return redirect(url_for('reset'))
-
-        new_password = generate_random_password()
-        user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
-        db.session.commit()
-
-        msg = Message('parola ta nouă studentxyz',
-              sender=app.config['MAIL_USERNAME'],
-              recipients=[email])
-        msg.body = f'parola ta nouă este: {new_password}\nte rugăm să o schimbi după ce te autentifici.'
-        msg.html = f'''
-<html>
-<body>
-  <div style="font-family: Helvetica, Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333; line-height: 1.6;">
-    <div style="background-color: #e0e0e0; padding: 30px 20px 20px; border-radius: 0 0 10px 10px; text-align: center;">
-      <img src="https://i.imgur.com/qPeqmKv.png" alt="logo" style="width: 320px; height: auto; display: block; margin: 0 auto;">
-    </div>
-
-    <div style="max-width: 600px; margin: 30px auto; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-      <h2 style="font-size: 24px; margin-bottom: 15px;">noua ta parolă este: </h2>
-      <span style="font-size: 27px; font-weight: bold; color: #2d7a2d; margin-bottom: 20px;">{new_password}</span>
-      <p style="font-size: 16px; margin-top: 25px;">te rugăm să o schimbi după ce te autentifici.</p>
-    </div>
-
-    <div style="background-color: #e0e0e0; color: #555; font-size: 13px; padding: 15px 10px; text-align: center;">
-      &copy; 2025 marelegsaa - all rights reserved.
-    </div>
-  </div>
-</body>
-</html>
-        '''
-        mail.send(msg)
-
-        flash('email trimis! verifică-ți inbox-ul pentru parola nouă.', 'info')
+            raise ValueError('user')
+    except Exception:
+        flash('link invalid sau expirat.', 'error')
         return redirect(url_for('login'))
+    if request.method == 'GET':
+        return render_template('login/reset_token.html', token=token)
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    if new_password != confirm_password:
+        flash('parolele nu coincid.', 'error')
+        return redirect(url_for('reset_token', token=token))
+    if (len(new_password) < 10 or not any(c.islower() for c in new_password) or
+        not any(c.isupper() for c in new_password) or not any(c.isdigit() for c in new_password)):
+        flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre.', 'error')
+        return redirect(url_for('reset_token', token=token))
+    user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
+    db.session.commit()
+    flash('parola a fost resetată.', 'success')
+    return redirect(url_for('login'))
     
 @app.route('/save_nota', methods=['POST'])
 def save_nota():
@@ -785,11 +962,12 @@ def save_nota():
     db.session.commit()
     return jsonify({'status': 'success'})
 
-@app.route('/logout')
+@app.route('/logout', methods=['POST'])
 def logout():
     session.pop('username', None)
     session.pop('user_id', None)
     session.pop('specializare', None)
+    flash('delogat.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
@@ -945,8 +1123,9 @@ def settings():
                 flash('parola curentă este incorectă!', 'error')
             elif new_password != confirm_password:
                 flash('parolele noi nu coincid!', 'error')
-            elif len(new_password) < 6:
-                flash('parola trebuie să aibă cel puțin 6 caractere!', 'error')
+            elif (len(new_password) < 10 or not any(c.islower() for c in new_password) or
+                  not any(c.isupper() for c in new_password) or not any(c.isdigit() for c in new_password)):
+                flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre!', 'error')
             else:
                 user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
                 db.session.commit()
@@ -1129,4 +1308,5 @@ def get_averages():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0')

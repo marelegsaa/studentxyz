@@ -1,12 +1,17 @@
 {% extends 'base_login.html' %}
 
 {% block head %}
+{% set meta_title = 'înregistrare | ' ~ site_name %}
+{% set meta_description = 'creează-ți un cont studentxyz pentru a urmări notele și performanța academică.' %}
+{% set meta_keywords = 'inregistrare student, cont nou, note, platformă academică' %}
+{% set meta_robots = 'noindex, nofollow' %}
 {% endblock %}
 
 {% block body %}
 <section class="signup-container">
-  <img style="display: block; margin: 0 auto;" class="glow logo" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63"> </img>
+  <img style="display: block; margin: 0 auto;" class="glow logo" src="{{url_for('static', filename='css/studentxyz.svg')}}" width="350" height="63">
   <form id="formularemail" class="info" method="POST" action="{{ url_for('signup') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
   <div class="input-section">
     <input id="nume" name="nume" type="text" placeholder="nume" required class="input">
     <input id="prenume" name="prenume" type="text" placeholder="prenume" required class="input">

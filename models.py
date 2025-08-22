@@ -28,3 +28,12 @@ class Nota(db.Model):
     nota = db.Column(db.Integer, nullable=True)
 
     user = db.relationship('User', backref=db.backref('note', lazy=True))
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'an', 'semestru', 'materie', name='uq_user_grade'),
+    )
+
+class LoginAttempt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(45), unique=True, index=True, nullable=False)
+    first_timestamp = db.Column(db.Float, nullable=False)
+    count = db.Column(db.Integer, default=0, nullable=False)
