@@ -23,6 +23,7 @@ app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(32)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+SESSION_IDLE_TIMEOUT = 1800  # seconds inactivity before session expires
 
 # Harden session cookies
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -116,12 +117,18 @@ def _ensure_csrf_token():
 
 @app.before_request
 def _apply_csrf_and_headers():
+    # Idle timeout
+    now = time.time()
+    last = session.get('last_activity')
+    if last and now - last > SESSION_IDLE_TIMEOUT:
+        session.clear()
+        flash('sesiune expirată din cauza inactivității.', 'info')
+        return redirect(url_for('login'))
+    session['last_activity'] = now
     _ensure_csrf_token()
-    # Skip CSRF for safe methods
     if request.method in ('GET', 'HEAD', 'OPTIONS'):
         return
-    # Exempt token confirmation routes
-    exempt = {'confirm_email', 'confirm_email_change'}
+    exempt = {'confirm_email', 'confirm_email_change', 'reset_token'}
     if request.endpoint in exempt:
         return
     token = request.headers.get(CSRF_HEADER)
@@ -141,7 +148,8 @@ def _security_headers(resp):
         "default-src 'self' https://cdn.jsdelivr.net; "
         "img-src 'self' data: https://i.imgur.com; "
         f"script-src 'self' https://cdn.jsdelivr.net 'nonce-{nonce}'; "
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' https://cdn.jsdelivr.net; "
+        "font-src 'self' data: https://cdn.jsdelivr.net; "
         "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
     resp.headers.setdefault('Content-Security-Policy', csp)
@@ -149,6 +157,8 @@ def _security_headers(resp):
     resp.headers.setdefault('X-Frame-Options', 'DENY')
     resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
     resp.headers.setdefault('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+    if request.host and not request.host.startswith('localhost') and os.getenv('ENABLE_HSTS','true').lower()=='true':
+        resp.headers.setdefault('Strict-Transport-Security','max-age=63072000; includeSubDomains; preload')
     return resp
 
 @app.context_processor
@@ -659,6 +669,14 @@ def login():
     if request.method == 'POST':
         ip = request.remote_addr or 'unknown'
         if _is_rate_limited(ip):
+            flash('prea multe cereri de resetare. încearcă mai târziu.', 'error')
+            return redirect(url_for('login'))
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
+            flash('prea multe încercări. încearcă din nou mai târziu.', 'error')
+            return redirect(url_for('signup'))
+        ip = request.remote_addr or 'unknown'
+        if _is_rate_limited(ip):
             flash('prea multe încercări. încearcă din nou mai târziu.', 'error')
             return redirect(url_for('login'))
         email = request.form.get('email')
@@ -810,34 +828,37 @@ def reset():
     if request.method == 'GET':
         return render_template('login/reset.html')
     if request.method == 'POST':
-        email = request.form.get('email')
-        generic_message = 'dacă emailul există și este confirmat, trimitem instrucțiuni de resetare.'
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            flash(generic_message, 'info')
-            return redirect(url_for('login'))
-        token = serializer.dumps({'uid': user.id, 'purpose': 'pwd-reset'}, salt='pwd-reset')
-        reset_url = url_for('reset_token', token=token, _external=True)
-        msg = Message('instrucțiuni resetare parolă', sender=app.config['MAIL_USERNAME'], recipients=[email])
-        msg.body = f"accesază acest link pentru a reseta parola (valabil 30 minute): {reset_url}"
-        msg.html = f"""
+                ip = request.remote_addr or 'unknown'
+                email = request.form.get('email')
+                generic_message = 'dacă emailul există și este confirmat, trimitem instrucțiuni de resetare.'
+                user = User.query.filter_by(email=email).first()
+                _record_login_attempt(ip, False)  # increment attempt regardless
+                if not user:
+                        flash(generic_message, 'info')
+                        return redirect(url_for('login'))
+                token = serializer.dumps({'uid': user.id, 'purpose': 'pwd-reset'}, salt='pwd-reset')
+                reset_url = url_for('reset_token', token=token, _external=True)
+                msg = Message('instrucțiuni resetare parolă', sender=app.config['MAIL_USERNAME'], recipients=[email])
+                msg.body = f"accesază acest link pentru a reseta parola (valabil 30 minute): {reset_url}"
+                msg.html = f"""
 <html><body>
 <div style='font-family: Helvetica, Arial, sans-serif; background:#f4f4f4;padding:20px;'>
-  <div style='max-width:600px;margin:0 auto;background:#ffffff;padding:25px;border-radius:8px;'>
-    <h2 style='margin-top:0;'>resetare parolă</h2>
-    <p>ai solicitat resetarea parolei. dă click pe butonul de mai jos (valabil 30 minute).</p>
-    <p style='text-align:center;margin:30px 0;'>
-      <a href='{reset_url}' style='background:#181818;color:#fff;padding:12px 22px;text-decoration:none;border-radius:6px;font-weight:bold;'>resetează parola</a>
-    </p>
-    <p>ignoră acest email dacă nu ai făcut tu cererea.</p>
-  </div>
-  <p style='text-align:center;font-size:12px;color:#666;margin-top:25px;'>&copy; 2025 marelegsaa</p>
+    <div style='max-width:600px;margin:0 auto;background:#ffffff;padding:25px;border-radius:8px;'>
+        <h2 style='margin-top:0;'>resetare parolă</h2>
+        <p>ai solicitat resetarea parolei. dă click pe butonul de mai jos (valabil 30 minute).</p>
+        <p style='text-align:center;margin:30px 0;'>
+            <a href='{reset_url}' style='background:#181818;color:#fff;padding:12px 22px;text-decoration:none;border-radius:6px;font-weight:bold;'>resetează parola</a>
+        </p>
+        <p>ignoră acest email dacă nu ai făcut tu cererea.</p>
+    </div>
+    <p style='text-align:center;font-size:12px;color:#666;margin-top:25px;'>&copy; 2025 marelegsaa</p>
 </div>
 </body></html>
-        """
-        mail.send(msg)
-        flash(generic_message, 'info')
-        return redirect(url_for('login'))
+                """
+                mail.send(msg)
+                _record_login_attempt(ip, True)  # reset counter on success
+                flash(generic_message, 'info')
+                return redirect(url_for('login'))
 
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_token(token):
