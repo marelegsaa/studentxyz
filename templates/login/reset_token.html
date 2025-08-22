@@ -1,0 +1,27 @@
+{% extends 'base_login.html' %}
+
+{% block head %}
+{% set meta_title = 'setează parolă nouă | ' ~ site_name %}
+{% set meta_description = 'introdu noua parolă pentru cont.' %}
+{% set meta_robots = 'noindex, nofollow' %}
+{% endblock %}
+
+{% block body %}
+<section class="container">
+  <img style="display:block;margin:0 auto;" class="glow logo" src="{{ url_for('static', filename='css/studentxyz.svg') }}" width="350" height="63" alt="logo">
+  <form method="POST" action="{{ url_for('reset_token', token=token) }}" class="info">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="input-section">
+      <input name="new_password" type="password" placeholder="parolă nouă" required minlength="10" class="input">
+    </div>
+    <div class="input-section">
+      <input name="confirm_password" type="password" placeholder="confirmă parola" required minlength="10" class="input">
+    </div>
+    <p class="subtext_reset">parola trebuie să aibă minim 10 caractere și să conțină litere mari, mici și cifre.</p>
+    <div class="button-section">
+      <button type="submit" class="reset">setează parola</button>
+    </div>
+  </form>
+  <p class="subtext">&copy; 2025 marelegsaa - all rights reserved.</p>
+</section>
+{% endblock %}

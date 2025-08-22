@@ -3,7 +3,8 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Nota
+from models import db, User, Nota, LoginAttempt
+from sqlalchemy import text
 from validari import MATERII, OPTIUNI_OPTIONALE, CREDITE, CREDITE_OPTIONALE
 from PIL import Image
 import os
@@ -50,30 +51,61 @@ with app.app_context():
     db.init_app(app)
     db.create_all()
 
+    def _auto_migrate_safe():
+        if os.getenv('DISABLE_AUTO_INDEX', 'false').lower() == 'true':
+            return
+        try:
+            # Deduplicate potential duplicates before adding unique index
+            dups = db.session.execute(text(
+                "SELECT user_id, an, semestru, materie, COUNT(*) c FROM nota GROUP BY user_id, an, semestru, materie HAVING c>1"
+            )).fetchall()
+            for user_id, an, sem, materie, _c in dups:
+                rows = db.session.execute(text(
+                    "SELECT id, nota FROM nota WHERE user_id=:u AND an=:a AND semestru=:s AND materie=:m ORDER BY (nota IS NULL), id DESC"
+                ), {'u': user_id, 'a': an, 's': sem, 'm': materie}).fetchall()
+                keep = rows[0][0]
+                delete_ids = [str(r[0]) for r in rows[1:]]
+                if delete_ids:
+                    db.session.execute(text(f"DELETE FROM nota WHERE id IN ({','.join(delete_ids)})"))
+            if dups:
+                db.session.commit()
+            # Create unique index idempotently
+            db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_grade ON nota(user_id, an, semestru, materie)"))
+            db.session.commit()
+        except Exception as e:
+            print(f"[auto-migrate] warning: {e}")
+            db.session.rollback()
+
+    _auto_migrate_safe()
+
 # ========================= Security Utilities =========================
 RATE_LIMIT_WINDOW = 300  # seconds
 MAX_LOGIN_ATTEMPTS = 10
-_login_attempts = {}
-
-def _cleanup_attempts():
-    now = time.time()
-    expired = [ip for ip, data in _login_attempts.items() if now - data['first'] > RATE_LIMIT_WINDOW]
-    for ip in expired:
-        _login_attempts.pop(ip, None)
 
 def _record_login_attempt(ip, success):
-    _cleanup_attempts()
-    data = _login_attempts.get(ip, {'count': 0, 'first': time.time()})
+    attempt = LoginAttempt.query.filter_by(ip=ip).first()
+    now = time.time()
+    if not attempt:
+        attempt = LoginAttempt(ip=ip, first_timestamp=now, count=0)
+        db.session.add(attempt)
+    if now - attempt.first_timestamp > RATE_LIMIT_WINDOW:
+        attempt.first_timestamp = now
+        attempt.count = 0
     if success:
-        data = {'count': 0, 'first': time.time()}
+        attempt.count = 0
+        attempt.first_timestamp = now
     else:
-        data['count'] += 1
-    _login_attempts[ip] = data
+        attempt.count += 1
+    db.session.commit()
 
 def _is_rate_limited(ip):
-    _cleanup_attempts()
-    data = _login_attempts.get(ip)
-    return data and data['count'] >= MAX_LOGIN_ATTEMPTS
+    attempt = LoginAttempt.query.filter_by(ip=ip).first()
+    if not attempt:
+        return False
+    now = time.time()
+    if now - attempt.first_timestamp > RATE_LIMIT_WINDOW:
+        return False
+    return attempt.count >= MAX_LOGIN_ATTEMPTS
 
 CSRF_HEADER = 'X-CSRF-Token'
 
@@ -103,7 +135,16 @@ def _apply_csrf_and_headers():
 
 @app.after_request
 def _security_headers(resp):
-    resp.headers.setdefault('Content-Security-Policy', "default-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://i.imgur.com; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+    nonce = session.get('csp_nonce') or secrets.token_hex(16)
+    session['csp_nonce'] = nonce
+    csp = (
+        "default-src 'self' https://cdn.jsdelivr.net; "
+        "img-src 'self' data: https://i.imgur.com; "
+        f"script-src 'self' https://cdn.jsdelivr.net 'nonce-{nonce}'; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    )
+    resp.headers.setdefault('Content-Security-Policy', csp)
     resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
     resp.headers.setdefault('X-Frame-Options', 'DENY')
     resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -112,7 +153,7 @@ def _security_headers(resp):
 
 @app.context_processor
 def _inject_csrf():
-    return {'csrf_token': _ensure_csrf_token()}
+    return {'csrf_token': _ensure_csrf_token(), 'csp_nonce': session.get('csp_nonce')}
 
 # SEO context (canonical & defaults)
 @app.context_processor
@@ -770,45 +811,61 @@ def reset():
         return render_template('login/reset.html')
     if request.method == 'POST':
         email = request.form.get('email')
+        generic_message = 'dacă emailul există și este confirmat, trimitem instrucțiuni de resetare.'
         user = User.query.filter_by(email=email).first()
-
         if not user:
-            flash('email-ul nu este înregistrat!', 'error')
-            return redirect(url_for('reset'))
-
-        new_password = generate_random_password()
-        user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
-        db.session.commit()
-
-        msg = Message('parola ta nouă studentxyz',
-              sender=app.config['MAIL_USERNAME'],
-              recipients=[email])
-        msg.body = f'parola ta nouă este: {new_password}\nte rugăm să o schimbi după ce te autentifici.'
-        msg.html = f'''
-<html>
-<body>
-  <div style="font-family: Helvetica, Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333; line-height: 1.6;">
-    <div style="background-color: #e0e0e0; padding: 30px 20px 20px; border-radius: 0 0 10px 10px; text-align: center;">
-      <img src="https://i.imgur.com/qPeqmKv.png" alt="logo" style="width: 320px; height: auto; display: block; margin: 0 auto;">
-    </div>
-
-    <div style="max-width: 600px; margin: 30px auto; background: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-      <h2 style="font-size: 24px; margin-bottom: 15px;">noua ta parolă este: </h2>
-      <span style="font-size: 27px; font-weight: bold; color: #2d7a2d; margin-bottom: 20px;">{new_password}</span>
-      <p style="font-size: 16px; margin-top: 25px;">te rugăm să o schimbi după ce te autentifici.</p>
-    </div>
-
-    <div style="background-color: #e0e0e0; color: #555; font-size: 13px; padding: 15px 10px; text-align: center;">
-      &copy; 2025 marelegsaa - all rights reserved.
-    </div>
+            flash(generic_message, 'info')
+            return redirect(url_for('login'))
+        token = serializer.dumps({'uid': user.id, 'purpose': 'pwd-reset'}, salt='pwd-reset')
+        reset_url = url_for('reset_token', token=token, _external=True)
+        msg = Message('instrucțiuni resetare parolă', sender=app.config['MAIL_USERNAME'], recipients=[email])
+        msg.body = f"accesază acest link pentru a reseta parola (valabil 30 minute): {reset_url}"
+        msg.html = f"""
+<html><body>
+<div style='font-family: Helvetica, Arial, sans-serif; background:#f4f4f4;padding:20px;'>
+  <div style='max-width:600px;margin:0 auto;background:#ffffff;padding:25px;border-radius:8px;'>
+    <h2 style='margin-top:0;'>resetare parolă</h2>
+    <p>ai solicitat resetarea parolei. dă click pe butonul de mai jos (valabil 30 minute).</p>
+    <p style='text-align:center;margin:30px 0;'>
+      <a href='{reset_url}' style='background:#181818;color:#fff;padding:12px 22px;text-decoration:none;border-radius:6px;font-weight:bold;'>resetează parola</a>
+    </p>
+    <p>ignoră acest email dacă nu ai făcut tu cererea.</p>
   </div>
-</body>
-</html>
-        '''
+  <p style='text-align:center;font-size:12px;color:#666;margin-top:25px;'>&copy; 2025 marelegsaa</p>
+</div>
+</body></html>
+        """
         mail.send(msg)
-
-        flash('email trimis! verifică-ți inbox-ul pentru parola nouă.', 'info')
+        flash(generic_message, 'info')
         return redirect(url_for('login'))
+
+@app.route('/reset/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    try:
+        data = serializer.loads(token, salt='pwd-reset', max_age=1800)
+        if data.get('purpose') != 'pwd-reset':
+            raise ValueError('purpose')
+        user = User.query.get(data.get('uid'))
+        if not user:
+            raise ValueError('user')
+    except Exception:
+        flash('link invalid sau expirat.', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'GET':
+        return render_template('login/reset_token.html', token=token)
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    if new_password != confirm_password:
+        flash('parolele nu coincid.', 'error')
+        return redirect(url_for('reset_token', token=token))
+    if (len(new_password) < 10 or not any(c.islower() for c in new_password) or
+        not any(c.isupper() for c in new_password) or not any(c.isdigit() for c in new_password)):
+        flash('parola trebuie să aibă minim 10 caractere și să includă litere mari, litere mici și cifre.', 'error')
+        return redirect(url_for('reset_token', token=token))
+    user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
+    db.session.commit()
+    flash('parola a fost resetată.', 'success')
+    return redirect(url_for('login'))
     
 @app.route('/save_nota', methods=['POST'])
 def save_nota():
