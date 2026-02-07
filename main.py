@@ -519,6 +519,14 @@ def generate_random_password(length=8):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/privacy-policy')
+def privacy_policy():
+    return send_from_directory('legal', 'POLITICA DE CONFIDENȚIALITATE A DATELOR.pdf')
+
+@app.route('/terms')
+def terms():
+    return send_from_directory('legal', 'TERMENI ȘI CONDIȚII DE UTILIZARE.pdf')
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if "username" in session:
@@ -558,7 +566,12 @@ def signup():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+        gdpr_consent = request.form.get('gdpr_consent')
 
+        if not gdpr_consent:
+            flash('trebuie să accepți Politica de Confidențialitate și Termenii de Utilizare', 'error')
+            return redirect(url_for('signup'))
+        
         if not email.endswith('@stud.ase.ro'):
             flash('trebuie să folosești un email instituțional (@stud.ase.ro)', 'error')
             return redirect(url_for('signup'))
