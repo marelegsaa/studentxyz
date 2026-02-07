@@ -45,6 +45,58 @@ with app.app_context():
 def is_physical_education(materie):
     return 'educație fizică' in materie.lower() or 'educatie fizica' in materie.lower()
 
+def get_previous_period(an, semestru):
+    an_int = int(an)
+    sem_int = int(semestru)
+    
+    if sem_int == 1:
+        if an_int == 1:
+            return None
+        else:
+            return (an_int - 1, 2)
+    else:
+        return (an_int, 1)
+
+def can_add_grades_for_period(user_id, an, semestru, specializare=None):
+    an_int = int(an)
+    sem_int = int(semestru)
+    
+    if an_int == 1 and sem_int == 1:
+        return True
+    
+    prev_period = get_previous_period(an, semestru)
+    if prev_period is None:
+        return True
+    
+    prev_an, prev_sem = prev_period
+    cheie = f"{prev_an}-{prev_sem}"
+
+    if specializare is None:
+        user = User.query.get(user_id)
+        if not user:
+            return False
+        specializare = user.specializare
+
+    obligatorii = []
+    if specializare in MATERII and cheie in MATERII[specializare]:
+        obligatorii = MATERII[specializare][cheie]
+    
+    if not obligatorii:
+        return True
+
+    for materie in obligatorii:
+        nota_existenta = Nota.query.filter_by(
+            user_id=user_id,
+            an=str(prev_an),
+            semestru=str(prev_sem),
+            materie=materie
+        ).first()
+        
+        if nota_existenta is None:
+            return False
+    
+    return True
+
 def predict_next_semester_grades(user_id, current_year, current_semester):
     
     print(f"DEBUG: Starting prediction for user {user_id}, {current_year}-{current_semester}")
@@ -745,6 +797,14 @@ def save_nota():
     if an_int not in [1, 2, 3] or sem_int not in [1, 2]:
         return jsonify({'status': 'error', 'msg': 'anul trebuie să fie între 1 și 3, semestrul între 1 și 2'}), 400
 
+    if not can_add_grades_for_period(user_id, an, semestru):
+        prev_period = get_previous_period(an, semestru)
+        prev_an, prev_sem = prev_period
+        return jsonify({
+            'status': 'error', 
+            'msg': f'trebuie să introduci notele din anul {prev_an} semestrul {prev_sem} înainte de a putea adăuga note aici!'
+        }), 403
+
     cheie = f"{an}-{semestru}"
     materii_valide = []
     if specializare in MATERII and cheie in MATERII[specializare]:
@@ -1120,6 +1180,76 @@ def remove_profile_picture():
         db.session.commit()
     
     return jsonify({'status': 'success'})
+
+@app.route('/api/get_missing_subjects')
+def get_missing_subjects():
+    if "user_id" not in session:
+        return jsonify({'error': 'not logged in'}), 401
+    
+    user_id = session['user_id']
+    year = request.args.get('year', type=int)
+    semester = request.args.get('semester', type=int)
+    
+    if not year or not semester:
+        return jsonify({'missing_subjects': []})
+
+    prev_period = get_previous_period(str(year), str(semester))
+    if prev_period is None:
+        return jsonify({'missing_subjects': []})
+    
+    prev_an, prev_sem = prev_period
+    cheie = f"{prev_an}-{prev_sem}"
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'missing_subjects': []})
+    
+    specializare = user.specializare
+
+    obligatorii = []
+    if specializare in MATERII and cheie in MATERII[specializare]:
+        obligatorii = MATERII[specializare][cheie]
+
+    missing = []
+    for materie in obligatorii:
+        nota_existenta = Nota.query.filter_by(
+            user_id=user_id,
+            an=str(prev_an),
+            semestru=str(prev_sem),
+            materie=materie
+        ).first()
+        
+        if nota_existenta is None:
+            missing.append(materie)
+    
+    return jsonify({
+        'missing_subjects': missing,
+        'total_missing': len(missing),
+        'required_period': f"anul {prev_an} semestrul {prev_sem}"
+    })
+
+@app.route('/api/get_available_periods')
+def get_available_periods():
+    if "user_id" not in session:
+        return jsonify({'error': 'not logged in'}), 401
+    
+    user_id = session['user_id']
+    
+    all_periods = [
+        (1, 1), (1, 2),
+        (2, 1), (2, 2),
+        (3, 1), (3, 2)
+    ]
+    
+    available_periods = []
+    
+    for an, semestru in all_periods:
+        if can_add_grades_for_period(user_id, str(an), str(semestru)):
+            available_periods.append(f"{an}-{semestru}")
+    
+    return jsonify({
+        'available_periods': available_periods
+    })
 
 @app.route('/api/get_averages')
 def get_averages():

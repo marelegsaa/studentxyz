@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const semester = parseInt(semesterSelect.value);
 
         if (checkNextSemesterExists(year, semester)) {
-            predictionSection.style.display = 'block';
+            predictionSection.classList.add('show');
 
             const currentGrades = getGradesForCurrentSemester();
             if (currentGrades.length > 0) {
@@ -408,10 +408,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const nextPeriod = transitions[`${year}-${semester}`];
             document.getElementById('predictionPeriodTitle').innerHTML = `🔮 predicții pentru ${nextPeriod}`;
         } else {
-            predictionSection.style.display = 'none';
+            predictionSection.classList.remove('show');
         }
 
-        predictionResults.style.display = 'none';
+        predictionResults.classList.remove('show');
         currentPredictions = null;
     }
 
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('predictedAverage').textContent = averagePredicted;
         document.getElementById('predictionConfidence').textContent = `${Math.round(predictions.confidence * 100)}%`;
         
-        predictionResults.style.display = 'block';
+        predictionResults.classList.add('show');
         predictionResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -515,6 +515,68 @@ document.addEventListener('DOMContentLoaded', function() {
             this.querySelector('.btn_icon').textContent = '✨';
         });
     });
+
+    let availablePeriods = [];
+
+    function checkAvailablePeriods() {
+        fetch('/api/get_available_periods')
+            .then(response => response.json())
+            .then(data => {
+                availablePeriods = data.available_periods || [];
+                updateInputStates();
+            })
+            .catch(error => {
+                console.error('Error fetching available periods:', error);
+                availablePeriods = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2'];
+            });
+    }
+
+    function updateInputStates() {
+        const an = yearSelect.value;
+        const semestru = semesterSelect.value;
+        const currentPeriod = `${an}-${semestru}`;
+        
+        const inputs = document.querySelectorAll('.grade-input, .pe-select');
+        inputs.forEach(input => {
+            if (availablePeriods.includes(currentPeriod)) {
+                input.disabled = false;
+            } else {
+                input.disabled = true;
+            }
+        });
+
+        const messageEl = document.getElementById('period-lock-message');
+        if (!availablePeriods.includes(currentPeriod)) {
+            fetch(`/api/get_missing_subjects?year=${an}&semester=${semestru}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.missing_subjects && data.missing_subjects.length > 0) {
+                        const missingList = data.missing_subjects.slice(0, 3).join(', ');
+                        const moreText = data.missing_subjects.length > 3 ? ` și altele...` : '';
+                        messageEl.innerHTML = `
+                            <strong>pentru a adăuga note în această perioadă, trebuie să completezi notele din ${data.required_period}</strong><br>
+                            materiile lipsă: <em>${missingList}${moreText}</em>
+                        `;
+                    } else {
+                        messageEl.textContent = `complează toate notele obligatorii din ${data.required_period}`;
+                    }
+                    if (messageEl) {
+                        messageEl.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching missing subjects:', error);
+                    if (messageEl) {
+                        messageEl.style.display = 'block';
+                        messageEl.textContent = `complează toate notele din perioada anterioară`;
+                    }
+                });
+        } else {
+            if (messageEl) {
+                messageEl.style.display = 'none';
+            }
+        }
+    }
     
     function updateTable() {
         const an = yearSelect.value;
@@ -695,6 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         updatePredictionSection();
+        updateInputStates();
     }
 
     window.updateGrade = function(input) {
@@ -798,6 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = yearSelect.value;
         const semester = semesterSelect.value;
         saveDashboardPosition(year, semester);
+        checkAvailablePeriods();
         updateTable();
     });
 
@@ -805,8 +869,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = yearSelect.value;
         const semester = semesterSelect.value;
         saveDashboardPosition(year, semester);
+        checkAvailablePeriods();
         updateTable();
     });
     
+    checkAvailablePeriods();
     updateTable();
 });

@@ -244,6 +244,11 @@
     font-size: 0.95rem;
 }
 
+.stats_table tbody tr td[colspan] {
+    text-align: center;
+    padding: 2rem;
+}
+
 .grade_badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
