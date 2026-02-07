@@ -537,16 +537,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPeriod = `${an}-${semestru}`;
         
         const inputs = document.querySelectorAll('.grade-input, .pe-select');
+
+        const isPeriodAllowed = availablePeriods.includes(currentPeriod);
+
         inputs.forEach(input => {
-            if (availablePeriods.includes(currentPeriod)) {
-                input.disabled = false;
-            } else {
+            if (!isPeriodAllowed) {
                 input.disabled = true;
+            } else {
+                const row = input.closest('tr');
+                const checkbox = row.querySelector('input[type="checkbox"]');
+
+                if (checkbox) {
+                    input.disabled = !checkbox.checked;
+                } else {
+                    input.disabled = false;
+                }
             }
         });
 
         const messageEl = document.getElementById('period-lock-message');
-        if (!availablePeriods.includes(currentPeriod)) {
+        if (!isPeriodAllowed) {
             fetch(`/api/get_missing_subjects?year=${an}&semester=${semestru}`)
                 .then(response => response.json())
                 .then(data => {
@@ -558,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             materiile lipsă: <em>${missingList}${moreText}</em>
                         `;
                     } else {
-                        messageEl.textContent = `complează toate notele obligatorii din ${data.required_period}`;
+                        messageEl.textContent = `completează toate notele obligatorii din ${data.required_period}`;
                     }
                     if (messageEl) {
                         messageEl.style.display = 'block';
@@ -568,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error fetching missing subjects:', error);
                     if (messageEl) {
                         messageEl.style.display = 'block';
-                        messageEl.textContent = `complează toate notele din perioada anterioară`;
+                        messageEl.textContent = `completează toate notele din perioada anterioară`;
                     }
                 });
         } else {

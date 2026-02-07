@@ -103,7 +103,7 @@ MATERII = {
 
 OPTIUNI_OPTIONALE = {
     '2-1': [
-        'construcţie şi depanare pc', 'modele regionale de economie', 'istoria economiei',
+        'construcție și depanare pc', 'modele regionale de economie', 'istoria economiei',
         'comunicare în limba engleză 1', 'comunicare în limba franceză 1',
         'comunicare în limba rusă 1', 'comunicare în limba spaniolă 1',
         'comunicare în limba italiană 1', 'comunicare în limba germană 1',
@@ -118,7 +118,7 @@ OPTIUNI_OPTIONALE = {
         'comunicare în limba spaniolă 2', 'comunicare în limba italiană 2',
         'managementul riscului în afaceri internaționale', 'antreprenoriat în comerț, turism și servicii',
         'finanțe corporative', 'negocieri internaționale', 'managementul relațiilor cu clienții',
-        'etică şi integritate academică', 'economia informației digitale cu aplicații în afaceri',
+        'etică și integritate academică', 'economia informației digitale cu aplicații în afaceri',
         'dezvoltare durabilă', 'analiza economico-financiară',
         'tehnici de scriere academică și învățare eficientă'
     ]
@@ -327,7 +327,7 @@ CREDITE = {
 
 CREDITE_OPTIONALE = {
     '2-1': {
-        'construcție şi depanare pc': 4,
+        'construcție și depanare pc': 4,
         'modele regionale de economie': 4,
         'istoria economiei': 4,
         'comunicare în limba engleză 1': 4,
@@ -357,7 +357,7 @@ CREDITE_OPTIONALE = {
         'finanțe corporative': 3,
         'negocieri internaționale': 3,
         'managementul relațiilor cu clienții': 3,
-        'etică şi integritate academică': 3,
+        'etică și integritate academică': 3,
         'economia informației digitale cu aplicații în afaceri': 3,
         'dezvoltare durabilă': 3,
         'analiza economico-financiară': 3,
