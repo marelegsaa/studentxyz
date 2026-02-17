@@ -479,6 +479,58 @@ def get_all_semester_averages(user_id):
     
     return semester_averages
 
+def get_yearly_averages(user_id):
+    yearly_averages = {}
+    
+    user = User.query.get(user_id)
+    if not user:
+        return yearly_averages
+    
+    specializare = user.specializare
+    
+    for year in [1, 2, 3]:
+        notes = Nota.query.filter_by(
+            user_id=user_id, 
+            an=year
+        ).filter(Nota.nota.isnot(None)).all()
+        
+        if not notes:
+            continue
+        
+        total_points = 0
+        total_credits = 0
+        
+        for nota in notes:
+            if is_physical_education(nota.materie):
+                continue
+                
+            try:
+                if isinstance(nota.nota, str):
+                    continue
+                nota_value = int(nota.nota)
+            except (ValueError, TypeError):
+                continue
+
+            cheie = f"{nota.an}-{nota.semestru}"
+            credits = 3
+            
+            if (specializare in CREDITE and 
+                cheie in CREDITE[specializare] and 
+                nota.materie in CREDITE[specializare][cheie]):
+                credits = CREDITE[specializare][cheie][nota.materie]
+            
+            elif cheie in CREDITE_OPTIONALE and nota.materie in CREDITE_OPTIONALE[cheie]:
+                credits = CREDITE_OPTIONALE[cheie][nota.materie]
+            
+            if credits > 0:
+                total_points += nota_value * credits
+                total_credits += credits
+        
+        if total_credits > 0:
+            yearly_averages[f"An {year}"] = round(total_points / total_credits, 2)
+    
+    return yearly_averages
+
 def calculate_best_semester(user_id):
     semester_averages = get_all_semester_averages(user_id)
     
@@ -938,13 +990,13 @@ def analytics():
         
     user_id = session.get('user_id')
 
-    weighted_average = get_overall_average(user_id)
+    yearly_averages = get_yearly_averages(user_id)
     semester_averages = get_all_semester_averages(user_id)
     best_semester, best_avg = calculate_best_semester(user_id)
     stats = get_detailed_stats(user_id)
     
     return render_template('homepage/analytics.html',
-                         weighted_average=weighted_average,
+                         yearly_averages=yearly_averages,
                          total_credits_earned=stats['total_credits_earned'],
                          subjects_passed=stats['subjects_passed'],
                          subjects_failed=stats['subjects_failed'],
@@ -1085,7 +1137,7 @@ def user():
     user_id = session['user_id']
     user = User.query.get(user_id)
 
-    medie = get_overall_average(user_id)
+    yearly_averages = get_yearly_averages(user_id)
 
     note = Nota.query.filter_by(user_id=user_id).filter(Nota.nota.isnot(None)).all()
     total_materii = len(note)
@@ -1106,7 +1158,7 @@ def user():
     
     return render_template('homepage/user.html', 
                          user=user, 
-                         medie=medie, 
+                         yearly_averages=yearly_averages, 
                          total_materii=total_materii,
                          facultate_display=facultate_display)
 

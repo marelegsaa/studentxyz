@@ -75,8 +75,9 @@
                     </div>
                     <div class="stat_item">
                         <div class="stat_value">
-                            {% if medie %}
-                                {{ "%.2f"|format(medie) }}
+                            {% if yearly_averages %}
+                                {% set latest_year = yearly_averages|list|last %}
+                                {{ yearly_averages[latest_year] }}
                             {% else %}
                                 -
                             {% endif %}
@@ -131,8 +132,9 @@
                 <div class="detail_item">
                     <span class="detail_label">media generală</span>
                     <span class="detail_value">
-                        {% if medie %}
-                            {{ "%.2f"|format(medie) }}
+                        {% if yearly_averages %}
+                            {% set latest_year = yearly_averages|list|last %}
+                            {{ yearly_averages[latest_year] }}
                         {% else %}
                             nu există note
                         {% endif %}
