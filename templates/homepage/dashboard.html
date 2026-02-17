@@ -8,17 +8,10 @@
 {% block body %}
 <script>
     const specializare = '{{ specializare }}';
+    const userPromotie = '{{ promotie }}';
     const note = {{ note|tojson|safe }};
     const anCurent = {{ an_curent }};
     const semestruCurent = {{ semestru_curent }};
-    
-    console.log('Template values:', {
-        specializare: specializare,
-        anCurent: anCurent,
-        semestruCurent: semestruCurent,
-        anCurentType: typeof anCurent,
-        semestruCurentType: typeof semestruCurent
-    });
 </script>
 <script src="{{ url_for('static', filename='java_script/script_dashboard.js') }}"></script>
 

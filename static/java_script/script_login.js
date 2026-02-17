@@ -14,8 +14,6 @@ function sanitizeFormInputs(form) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("signup.js loaded");
-
     document.getElementById('formularemail')?.addEventListener('submit', function(e) {
         sanitizeFormInputs(this);
         const email = document.getElementById('email').value;
@@ -41,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const facultateSelect = document.getElementById("facultate");
     const specializareSelect = document.getElementById("specializare");
     const anSelect = document.getElementById("an");
+    const promotieSelect = document.getElementById("promotie");
   
     const specializari = {
       csie: [
@@ -89,22 +88,55 @@ document.addEventListener("DOMContentLoaded", function () {
         "unternehmensführung - deutsch"
       ]
     };
-  
-    if (facultateSelect) {
-        facultateSelect.addEventListener("change", function () {
-            const selected = facultateSelect.value;
-            specializareSelect.innerHTML = '<option value="">--selectează specializarea--</option>';
+    
+    function updateSpecializariList() {
+        const selectedFacultate = facultateSelect.value;
+        const selectedPromotie = promotieSelect ? promotieSelect.value : '';
+        
+        specializareSelect.innerHTML = '<option value="">--selectează specializarea--</option>';
+        
+        if (!selectedFacultate) {
             specializareSelect.style.display = "none";
             anSelect.style.display = "none";
-    
-            if (specializari[selected]) {
-                specializari[selected].forEach(function (spec) {
-                    const opt = document.createElement("option");
-                    opt.value = spec;
-                    opt.textContent = spec;
-                    specializareSelect.appendChild(opt);
-                });
-                specializareSelect.style.display = "block";
+            return;
+        }
+
+        let listaSpec = specializari[selectedFacultate] || [];
+
+        if (selectedFacultate === 'csie') {
+            if (selectedPromotie === '2025-2028') {
+                listaSpec = [
+                    "cibernetică economică",
+                    "informatică economică",
+                    "statistică economică și data science"
+                ];
+            } else {
+                listaSpec = [
+                    "cibernetică economică",
+                    "informatică economică",
+                    "statistică și previziune economică"
+                ];
+            }
+        }
+
+        listaSpec.forEach(function (spec) {
+            const opt = document.createElement("option");
+            opt.value = spec;
+            opt.textContent = spec;
+            specializareSelect.appendChild(opt);
+        });
+        
+        specializareSelect.style.display = "block";
+    }
+  
+    if (facultateSelect) {
+        facultateSelect.addEventListener("change", updateSpecializariList);
+    }
+
+    if (promotieSelect) {
+        promotieSelect.addEventListener("change", function() {
+            if (facultateSelect.value) {
+                updateSpecializariList();
             }
         });
     }
@@ -118,4 +150,4 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
-  });
+});

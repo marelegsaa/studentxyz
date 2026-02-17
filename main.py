@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from models import db, User, Nota
 from validari import MATERII, OPTIUNI_OPTIONALE, CREDITE, CREDITE_OPTIONALE
+from validari import get_materii, get_credite, get_optiuni_optionale, get_credite_optionale
 from PIL import Image
 import os
 import uuid
@@ -73,13 +74,15 @@ def can_add_grades_for_period(user_id, an, semestru, specializare=None):
 
     if specializare is None:
         user = User.query.get(user_id)
-        if not user:
-            return False
+        if not user: return False
         specializare = user.specializare
-
+        promotie = user.promotie
+    
+    materii_dict = get_materii(promotie)
+    
     obligatorii = []
-    if specializare in MATERII and cheie in MATERII[specializare]:
-        obligatorii = MATERII[specializare][cheie]
+    if specializare in materii_dict and cheie in materii_dict[specializare]:
+        obligatorii = materii_dict[specializare][cheie]
     
     if not obligatorii:
         return True
@@ -98,9 +101,6 @@ def can_add_grades_for_period(user_id, an, semestru, specializare=None):
     return True
 
 def predict_next_semester_grades(user_id, current_year, current_semester):
-    
-    print(f"DEBUG: Starting prediction for user {user_id}, {current_year}-{current_semester}")
-    
     try:
         semester_transitions = {
             (1, 1): (1, 2),
@@ -111,22 +111,20 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
         }
         
         if (current_year, current_semester) not in semester_transitions:
-            print(f"DEBUG: No next semester for {current_year}-{current_semester}")
             return None
         
         next_year, next_semester = semester_transitions[(current_year, current_semester)]
-        print(f"DEBUG: Next semester: {next_year}-{next_semester}")
         
         user = User.query.get(user_id)
         if not user:
-            print(f"DEBUG: User {user_id} not found")
             return None
         
-        specializare = user.specializare
-        print(f"DEBUG: User specialization: {specializare}")
+        promotie = user.promotie
+        specializare_key = user.specializare.lower().strip()
         
-        if specializare not in MATERII:
-            print(f"DEBUG: Specialization {specializare} not found in MATERII")
+        materii_dict = get_materii(promotie)
+        
+        if specializare_key not in materii_dict:
             return None
         
         current_notes = Nota.query.filter_by(
@@ -135,8 +133,6 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
             semestru=current_semester
         ).all()
         
-        print(f"DEBUG: Found {len(current_notes)} notes for current semester")
-        
         valid_grades = []
         current_grades_dict = {}
         
@@ -144,7 +140,6 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
             if nota.nota is not None:
                 if is_physical_education(nota.materie):
                     current_grades_dict[nota.materie.lower()] = str(nota.nota).lower()
-                    print(f"DEBUG: PE grade: {nota.materie} = {nota.nota}")
                 else:
                     try:
                         if isinstance(nota.nota, str):
@@ -153,100 +148,80 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
                         if 1 <= grade_value <= 10:
                             valid_grades.append(grade_value)
                             current_grades_dict[nota.materie.lower()] = grade_value
-                            print(f"DEBUG: Valid grade: {nota.materie} = {grade_value}")
                     except (ValueError, TypeError):
-                        print(f"DEBUG: Invalid grade value for {nota.materie}: {nota.nota}")
+                        continue
         
         if not valid_grades:
-            print("DEBUG: No valid numerical grades found")
             return None
         
-        print(f"DEBUG: Processing {len(valid_grades)} valid grades: {valid_grades}")
-
         media_curenta = sum(valid_grades) / len(valid_grades)
-        print(f"DEBUG: Current average: {media_curenta}")
 
         next_semester_key = f"{next_year}-{next_semester}"
-        print(f"DEBUG: Looking for subjects in {next_semester_key}")
         
-        if next_semester_key not in MATERII[specializare]:
-            print(f"DEBUG: No subjects found for {next_semester_key} in {specializare}")
+        if next_semester_key not in materii_dict[specializare_key]:
             return None
         
-        next_subjects = MATERII[specializare][next_semester_key]
-        print(f"DEBUG: Next semester subjects: {next_subjects}")
+        next_subjects = materii_dict[specializare_key][next_semester_key]
 
         predictions = {}
         
         for subject in next_subjects:
             if is_physical_education(subject):
-                if media_curenta >= 7:
+                if media_curenta >= 5:
                     predictions[subject] = "admis"
-                elif media_curenta >= 5:
-                    predictions[subject] = "admis" if random.random() < 0.8 else "respins"
                 else:
-                    predictions[subject] = "respins" if random.random() < 0.6 else "admis"
-                print(f"DEBUG: Predicted PE {subject}: {predictions[subject]}")
+                    predictions[subject] = "respins" if random.random() < 0.3 else "admis"
                 continue
             
             base_prediction = media_curenta
             
             if any(keyword in subject.lower() for keyword in ['matematică', 'algebră', 'analiză']):
-                base_prediction -= random.uniform(0.5, 1.5)
+                base_prediction -= random.uniform(0.5, 1.0) 
                 math_keywords = ['algebră', 'analiză', 'matematică', 'statisticii']
                 for math_kw in math_keywords:
                     for curr_subject, grade in current_grades_dict.items():
                         if isinstance(grade, int) and math_kw in curr_subject:
                             base_prediction = (base_prediction + grade) / 2
-                            print(f"DEBUG: Math correlation: {curr_subject} ({grade}) -> {subject}")
                             break
                             
             elif any(keyword in subject.lower() for keyword in ['programare', 'algoritmi', 'informatică', 'baze']):
                 prog_keywords = ['programare', 'algoritmi', 'baze', 'informatică', 'tehnologiei']
                 prog_grades = []
-                
                 for prog_kw in prog_keywords:
                     for curr_subject, grade in current_grades_dict.items():
                         if isinstance(grade, int) and prog_kw in curr_subject:
                             prog_grades.append(grade)
-                            print(f"DEBUG: Programming correlation: {curr_subject} ({grade}) -> {subject}")
-                
                 if prog_grades:
-                    base_prediction = (base_prediction + sum(prog_grades) / len(prog_grades)) / 2
-                base_prediction += random.uniform(-1, 1.5)
+                    avg_prog = sum(prog_grades) / len(prog_grades)
+                    base_prediction = (base_prediction + avg_prog) / 2
+                base_prediction += random.uniform(-0.5, 0.5)
                 
             elif any(keyword in subject.lower() for keyword in ['statistică', 'econometrie', 'probabilități']):
                 stat_keywords = ['statistică', 'statisticii', 'probabilități', 'econometrie']
                 stat_grades = []
-                
                 for stat_kw in stat_keywords:
                     for curr_subject, grade in current_grades_dict.items():
                         if isinstance(grade, int) and stat_kw in curr_subject:
                             stat_grades.append(grade)
-                            print(f"DEBUG: Statistics correlation: {curr_subject} ({grade}) -> {subject}")
-                
                 if stat_grades:
-                    base_prediction = (base_prediction + sum(stat_grades) / len(stat_grades)) / 2
+                    avg_stat = sum(stat_grades) / len(stat_grades)
+                    base_prediction = (base_prediction + avg_stat) / 2
                     
             elif any(keyword in subject.lower() for keyword in ['economie', 'management', 'marketing', 'finanțe']):
-                base_prediction += random.uniform(0, 1)
+                base_prediction += random.uniform(0, 0.5) 
                 econ_keywords = ['economie', 'management', 'marketing', 'finanțe']
                 for econ_kw in econ_keywords:
                     for curr_subject, grade in current_grades_dict.items():
                         if isinstance(grade, int) and econ_kw in curr_subject:
                             base_prediction = (base_prediction + grade) / 2
-                            print(f"DEBUG: Economics correlation: {curr_subject} ({grade}) -> {subject}")
                             break
             
-            progression_factor = 0.3 if next_year > current_year else 0.1
-            base_prediction += random.uniform(0, progression_factor)
-            
-            base_prediction += random.uniform(-0.5, 0.5)
+            progression_factor = 0.2 if next_year > current_year else 0.0
+            base_prediction -= progression_factor
+            base_prediction += random.uniform(-0.2, 0.2)
             
             predicted_grade = max(1, min(10, base_prediction))
-            predictions[subject] = round(predicted_grade, 1)
-            
-            print(f"DEBUG: Predicted {subject}: {predicted_grade}")
+            predictions[subject] = round(predicted_grade, 0)
         
         if len(valid_grades) > 1:
             mean_val = sum(valid_grades) / len(valid_grades)
@@ -255,7 +230,7 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
         else:
             grade_std = 0
             
-        confidence = max(0.6, min(0.9, (media_curenta / 10) * (1 - grade_std / 10)))
+        confidence = max(0.6, min(0.95, (media_curenta / 10) * (1 - grade_std / 15)))
         
         result = {
             'next_year': next_year,
@@ -264,75 +239,36 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
             'confidence': round(confidence, 2)
         }
         
-        print(f"DEBUG: Final result: {result}")
         return result
         
     except Exception as e:
-        print(f"DEBUG ERROR in prediction: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return None
-
+    
 @app.route('/api/predict_grades', methods=['POST'])
 def predict_grades():
-    
-    print("DEBUG: predict_grades endpoint called")
-    
     if "user_id" not in session:
-        print("DEBUG: User not logged in")
-        return jsonify({'error': 'not logged in'}), 401
-    
+        return jsonify({'success': False, 'message': 'User not logged in'}), 401
+        
     try:
         data = request.get_json()
-        print(f"DEBUG: Received data: {data}")
+        current_year = data.get('year')
+        current_semester = data.get('semester')
         
-        if not data:
-            print("DEBUG: No JSON data received")
-            return jsonify({'error': 'No data provided'}), 400
+        if not current_year or not current_semester:
+            return jsonify({'success': False, 'message': 'Missing year or semester'}), 400
             
-        year = int(data.get('year', 0))
-        semester = int(data.get('semester', 0))
-        user_id = session['user_id']
+        result = predict_next_semester_grades(session['user_id'], current_year, current_semester)
         
-        print(f"DEBUG: Processing prediction for user {user_id}, year {year}, semester {semester}")
-        
-        if year not in [1, 2, 3] or semester not in [1, 2]:
-            print(f"DEBUG: Invalid year/semester: {year}/{semester}")
+        if result:
+            return jsonify({'success': True, 'predictions': result})
+        else:
             return jsonify({
-                'error': 'date invalide',
-                'message': 'anul trebuie să fie 1-3, semestrul 1-2.'
-            }), 400
-        
-        predictions = predict_next_semester_grades(user_id, year, semester)
-        
-        if predictions is None:
-            print("DEBUG: Predictions returned None")
-            return jsonify({
-                'error': 'nu se pot face predicții',
-                'message': 'introduceți mai întâi notele pentru semestrul curent.'
+                'success': False, 
+                'message': 'Nu s-au putut genera predicții (posibil ultimul semestru sau date insuficiente).'
             })
-        
-        print("DEBUG: Predictions successful")
-        return jsonify({
-            'success': True,
-            'predictions': predictions
-        })
-        
-    except ValueError as e:
-        print(f"DEBUG: ValueError: {str(e)}")
-        return jsonify({
-            'error': 'date invalide',
-            'message': f'eroare de validare: {str(e)}'
-        }), 400
-        
+            
     except Exception as e:
-        print(f"DEBUG: Unexpected error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'error': 'eroare internă',
-            'message': 'a apărut o eroare neașteptată.'
-        }), 500
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
 
 @app.route('/api/get_prediction_accuracy', methods=['GET'])
 def get_prediction_accuracy():
@@ -349,7 +285,6 @@ def get_prediction_accuracy():
             'model_version': '1.0'
         })
     except Exception as e:
-        print(f"ERROR in get_prediction_accuracy: {str(e)}")
         return jsonify({
             'error': 'eroare la încărcarea metricilor',
             'message': str(e)
@@ -367,14 +302,6 @@ def get_common_subjects(spec1, spec2):
     return common
 
 def calculate_semester_average(user_id, year, semester):
-
-    print(f"DEBUG: CREDITE_OPTIONALE disponibil: {'CREDITE_OPTIONALE' in globals()}")
-    try:
-        print(f"DEBUG: CREDITE_OPTIONALE keys: {list(CREDITE_OPTIONALE.keys())}")
-    except NameError:
-        print("DEBUG: CREDITE_OPTIONALE nu este definit!")
-        return None
-    
     notes = Nota.query.filter_by(
         user_id=user_id, 
         an=year, 
@@ -386,37 +313,39 @@ def calculate_semester_average(user_id, year, semester):
     
     user = User.query.get(user_id)
     specializare = user.specializare
+    promotie = user.promotie
+
+    materii_dict = get_materii(promotie)
+    credite_dict = get_credite(promotie)
+    credite_opt_dict = get_credite_optionale(promotie)
     
     total_points = 0
     total_credits = 0
     
     for nota in notes:
-        if is_physical_education(nota.materie):
-            continue
-            
-        try:
-            if isinstance(nota.nota, str):
-                continue
-            nota_value = int(nota.nota)
-        except (ValueError, TypeError):
-            continue
-
         cheie = f"{nota.an}-{nota.semestru}"
         credits = 3
         
-        print(f"DEBUG: Procesez materia '{nota.materie}' pentru {cheie}")
+        if (specializare in credite_dict and 
+            cheie in credite_dict[specializare] and 
+            nota.materie in credite_dict[specializare][cheie]):
+            credits = credite_dict[specializare][cheie][nota.materie]
+        elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
+            credits = credite_opt_dict[cheie][nota.materie]
+        elif is_physical_education(nota.materie):
+            credits = 1
 
-        if (specializare in CREDITE and 
-            cheie in CREDITE[specializare] and 
-            nota.materie in CREDITE[specializare][cheie]):
-            credits = CREDITE[specializare][cheie][nota.materie]
-            print(f"DEBUG: Găsit în CREDITE: {nota.materie} = {credits} credite")
-
-        elif cheie in CREDITE_OPTIONALE and nota.materie in CREDITE_OPTIONALE[cheie]:
-            credits = CREDITE_OPTIONALE[cheie][nota.materie]
-            print(f"DEBUG: Găsit în CREDITE_OPTIONALE: {nota.materie} = {credits} credite")
-        else:
-            print(f"DEBUG: Nu găsit în dicționare, folosesc valoarea implicită: {nota.materie} = {credits} credite")
+        if is_physical_education(nota.materie):
+            if str(nota.nota).lower() == 'admis':
+                total_points += credits
+                total_credits += credits
+            continue
+            
+        try:
+            if isinstance(nota.nota, str): continue
+            nota_value = int(nota.nota)
+        except (ValueError, TypeError):
+            continue
         
         if credits > 0:
             total_points += nota_value * credits
@@ -434,32 +363,39 @@ def get_overall_average(user_id):
     
     user = User.query.get(user_id)
     specializare = user.specializare
+    promotie = user.promotie
+    
+    credite_dict = get_credite(promotie)
+    credite_opt_dict = get_credite_optionale(promotie)
     
     total_points = 0
     total_credits = 0
     
     for nota in notes:
+        cheie = f"{nota.an}-{nota.semestru}"
+        credits = 3
+        
+        if (specializare in credite_dict and 
+            cheie in credite_dict[specializare] and 
+            nota.materie in credite_dict[specializare][cheie]):
+            credits = credite_dict[specializare][cheie][nota.materie]
+        elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
+            credits = credite_opt_dict[cheie][nota.materie]
+        elif is_physical_education(nota.materie):
+            credits = 1
+        
         if is_physical_education(nota.materie):
+            if str(nota.nota).lower() == 'admis':
+                total_points += credits
+                total_credits += credits
             continue
             
         try:
-            if isinstance(nota.nota, str):
-                continue
+            if isinstance(nota.nota, str): continue
             nota_value = int(nota.nota)
         except (ValueError, TypeError):
             continue
 
-        cheie = f"{nota.an}-{nota.semestru}"
-        credits = 3
-        
-        if (specializare in CREDITE and 
-            cheie in CREDITE[specializare] and 
-            nota.materie in CREDITE[specializare][cheie]):
-            credits = CREDITE[specializare][cheie][nota.materie]
-        
-        elif cheie in CREDITE_OPTIONALE and nota.materie in CREDITE_OPTIONALE[cheie]:
-            credits = CREDITE_OPTIONALE[cheie][nota.materie]
-        
         if credits > 0:
             total_points += nota_value * credits
             total_credits += credits
@@ -487,6 +423,10 @@ def get_yearly_averages(user_id):
         return yearly_averages
     
     specializare = user.specializare
+    promotie = user.promotie
+    
+    credite_dict = get_credite(promotie)
+    credite_opt_dict = get_credite_optionale(promotie)
     
     for year in [1, 2, 3]:
         notes = Nota.query.filter_by(
@@ -501,26 +441,29 @@ def get_yearly_averages(user_id):
         total_credits = 0
         
         for nota in notes:
-            if is_physical_education(nota.materie):
-                continue
-                
-            try:
-                if isinstance(nota.nota, str):
-                    continue
-                nota_value = int(nota.nota)
-            except (ValueError, TypeError):
-                continue
-
             cheie = f"{nota.an}-{nota.semestru}"
             credits = 3
             
-            if (specializare in CREDITE and 
-                cheie in CREDITE[specializare] and 
-                nota.materie in CREDITE[specializare][cheie]):
-                credits = CREDITE[specializare][cheie][nota.materie]
+            if (specializare in credite_dict and 
+                cheie in credite_dict[specializare] and 
+                nota.materie in credite_dict[specializare][cheie]):
+                credits = credite_dict[specializare][cheie][nota.materie]
+            elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
+                credits = credite_opt_dict[cheie][nota.materie]
+            elif is_physical_education(nota.materie):
+                credits = 1
             
-            elif cheie in CREDITE_OPTIONALE and nota.materie in CREDITE_OPTIONALE[cheie]:
-                credits = CREDITE_OPTIONALE[cheie][nota.materie]
+            if is_physical_education(nota.materie):
+                if str(nota.nota).lower() == 'admis':
+                    total_points += credits
+                    total_credits += credits
+                continue
+
+            try:
+                if isinstance(nota.nota, str): continue
+                nota_value = int(nota.nota)
+            except (ValueError, TypeError):
+                continue
             
             if credits > 0:
                 total_points += nota_value * credits
@@ -557,6 +500,10 @@ def get_detailed_stats(user_id):
     
     user = User.query.get(user_id)
     specializare = user.specializare
+    promotie = user.promotie
+    
+    credite_dict = get_credite(promotie)
+    credite_opt_dict = get_credite_optionale(promotie)
     
     total_credits_earned = 0
     subjects_passed = 0
@@ -567,17 +514,25 @@ def get_detailed_stats(user_id):
     for nota in notes:
         total_subjects += 1
         
+        cheie = f"{nota.an}-{nota.semestru}"
+        credits = 3
+        if (specializare in credite_dict and 
+            cheie in credite_dict[specializare] and 
+            nota.materie in credite_dict[specializare][cheie]):
+            credits = credite_dict[specializare][cheie][nota.materie]
+        elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
+            credits = credite_opt_dict[cheie][nota.materie]
+
         if is_physical_education(nota.materie):
             if str(nota.nota).lower() == 'admis':
                 subjects_passed += 1
-                total_credits_earned += 1
+                total_credits_earned += credits
             else:
                 subjects_failed += 1
             continue
         
         try:
-            if isinstance(nota.nota, str):
-                continue
+            if isinstance(nota.nota, str): continue
             nota_value = int(nota.nota)
         except (ValueError, TypeError):
             continue
@@ -589,17 +544,6 @@ def get_detailed_stats(user_id):
 
         if nota_value >= 5:
             subjects_passed += 1
-            cheie = f"{nota.an}-{nota.semestru}"
-            credits = 3
-            
-            if (specializare in CREDITE and 
-                cheie in CREDITE[specializare] and 
-                nota.materie in CREDITE[specializare][cheie]):
-                credits = CREDITE[specializare][cheie][nota.materie]
-
-            elif cheie in CREDITE_OPTIONALE and nota.materie in CREDITE_OPTIONALE[cheie]:
-                credits = CREDITE_OPTIONALE[cheie][nota.materie]
-                
             total_credits_earned += credits
         else:
             subjects_failed += 1
@@ -665,6 +609,7 @@ def signup():
         nume = request.form.get('nume')
         prenume = request.form.get('prenume')
         facultate = request.form.get('facultate')
+        promotie = request.form.get('promotie')
         specializare = request.form.get('specializare')
         an = request.form.get('an')
         email = request.form.get('email')
@@ -696,6 +641,7 @@ def signup():
             prenume=prenume,
             facultate=facultate,
             specializare=specializare,
+            promotie=promotie,
             an=an,
             email=email,
             password=hashed_password
@@ -840,6 +786,12 @@ def save_nota():
     nota = data['nota']
     user_id = session['user_id']
     specializare = session.get('specializare')
+    
+    user = User.query.get(user_id)
+    promotie = user.promotie
+    
+    materii_dict = get_materii(promotie)
+    optiuni_dict = get_optiuni_optionale(promotie)
 
     try:
         an_int = int(an)
@@ -859,10 +811,17 @@ def save_nota():
 
     cheie = f"{an}-{semestru}"
     materii_valide = []
-    if specializare in MATERII and cheie in MATERII[specializare]:
-        materii_valide.extend(MATERII[specializare][cheie])
-    if cheie in OPTIUNI_OPTIONALE:
-        materii_valide.extend(OPTIUNI_OPTIONALE[cheie])
+    
+    if specializare in materii_dict and cheie in materii_dict[specializare]:
+        materii_valide.extend(materii_dict[specializare][cheie])
+    
+    if cheie in optiuni_dict:
+        opt_data = optiuni_dict[cheie]
+        if isinstance(opt_data, dict) and 'optiuni' in opt_data:
+             materii_valide.extend(opt_data['optiuni'])
+        elif isinstance(opt_data, list):
+             materii_valide.extend(opt_data)
+             
         materii_valide.extend([f"optional-{i}" for i in range(2)])
 
     if materie not in materii_valide:
@@ -923,9 +882,9 @@ def dashboard():
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-    specializare = session['specializare']
+    user = User.query.get(user_id) 
+    specializare = user.specializare
 
-    user = User.query.get(user_id)
     note = Nota.query.filter_by(user_id=user_id).all()
 
     note_dict = {}
@@ -933,30 +892,31 @@ def dashboard():
         key = f"{nota.an}-{nota.semestru}-{nota.materie}"
         note_dict[key] = nota.nota
     
-    an_student = int(user.an)
-    semestru_student = int(user.semestru_curent) if user.semestru_curent else 1
-
-    if 'dashboard_year' in session and 'dashboard_semester' in session:
-        an_implicit = session['dashboard_year']
-        semestru_implicit = session['dashboard_semester']
-        print(f"DEBUG Dashboard - Using saved position: Year {an_implicit}, Semester {semestru_implicit}")
-    else:
-        an_implicit = an_student
-        semestru_implicit = semestru_student
-        print(f"DEBUG Dashboard - Using profile settings: Year {an_implicit}, Semester {semestru_implicit}")
+    try:
+        an_implicit = int(user.an)
+    except:
+        an_implicit = 1
+        
+    try:
+        semestru_implicit = int(user.semestru_curent) if user.semestru_curent else 1
+    except:
+        semestru_implicit = 1
 
     if an_implicit not in [1, 2, 3]:
         an_implicit = 1
     if semestru_implicit not in [1, 2]:
         semestru_implicit = 1
     
-    print(f"DEBUG Dashboard - Final values: Year {an_implicit}, Semester {semestru_implicit}")
+    session['dashboard_year'] = an_implicit
+    session['dashboard_semester'] = semestru_implicit
+    session['specializare'] = specializare
 
     return render_template('homepage/dashboard.html', 
                          specializare=specializare, 
                          note=note_dict,
                          an_curent=an_implicit,
-                         semestru_curent=semestru_implicit)
+                         semestru_curent=semestru_implicit,
+                         promotie=user.promotie)
 
 @app.route('/save_dashboard_position', methods=['POST'])
 def save_dashboard_position():
@@ -966,6 +926,7 @@ def save_dashboard_position():
     data = request.get_json()
     year = data.get('year')
     semester = data.get('semester')
+    user_id = session['user_id']
 
     try:
         year = int(year)
@@ -976,12 +937,16 @@ def save_dashboard_position():
     if year not in [1, 2, 3] or semester not in [1, 2]:
         return jsonify({'error': 'values out of range'}), 400
 
+    user = User.query.get(user_id)
+    if user:
+        user.an = str(year)
+        user.semestru_curent = str(semester)
+        db.session.commit()
+
     session['dashboard_year'] = year
     session['dashboard_semester'] = semester
     
-    print(f"DEBUG - Saved dashboard position: Year {year}, Semester {semester}")
-    
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success', 'msg': 'Profil academic actualizat'})
 
 @app.route('/analytics')
 def analytics():
@@ -1031,16 +996,17 @@ def settings():
         elif action == 'update_academic':
             old_specializare = user.specializare
             new_specializare = request.form.get('specializare')
+            new_promotie = request.form.get('promotie')
             new_an = request.form.get('an')
             new_semestru = request.form.get('semestru_curent')
             
             user.facultate = request.form.get('facultate')
             user.specializare = new_specializare
+            user.promotie = new_promotie
             user.an = new_an
             user.semestru_curent = new_semestru
 
             session['specializare'] = new_specializare
-            
             session['dashboard_year'] = int(new_an)
             session['dashboard_semester'] = int(new_semestru)
 
@@ -1257,10 +1223,13 @@ def get_missing_subjects():
         return jsonify({'missing_subjects': []})
     
     specializare = user.specializare
+    promotie = user.promotie
+    
+    materii_dict = get_materii(promotie)
 
     obligatorii = []
-    if specializare in MATERII and cheie in MATERII[specializare]:
-        obligatorii = MATERII[specializare][cheie]
+    if specializare in materii_dict and cheie in materii_dict[specializare]:
+        obligatorii = materii_dict[specializare][cheie]
 
     missing = []
     for materie in obligatorii:
@@ -1324,4 +1293,4 @@ def get_averages():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(debug=False)

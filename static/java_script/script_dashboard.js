@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     yearSelect.value = String(anCurent);
     semesterSelect.value = String(semestruCurent);
 
+    const promotieActiva = (typeof userPromotie !== 'undefined' && userPromotie) ? userPromotie : '2024-2027';
+
     let currentPredictions = null;
 
     function isPhysicalEducation(materie) {
@@ -20,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
                materie.toLowerCase().includes('educatie fizica si sport');
     }
 
-    const materii = {
+    const materii_old = {
         'cibernetică economică': {
             '1-1': ['economie', 'algebră', 'bazele statisticii', 'bazele cercetărilor operaționale', 
                     'bazele tehnologiei informației', 'bazele programării calculatoarelor', 
@@ -36,12 +38,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     'microeconomie managerială', 'practică de specialitate'],
             '3-1': ['cibernetica sistemelor economice', 'cercetări operaționale',
                     'economia și gestiunea riscului', 'sisteme suport de decizie', 'analiza datelor',
-                    'dinamica sistemelor economice', 'sondaje și anchete statistice', 'demografie',
-                    'tehnologii web', 'multimedia', 'sgbd oracle', 'robotică',
-                    'modelare stochastică în domeniul economic'],
+                    'dinamica sistemelor economice'],
             '3-2': ['sociologie', 'serii de timp', 'sisteme informaționale pentru conducere',
                     'pachete software', 'teoria jocurilor', 'inteligență computațională în economie',
-                    'dreptul afacerilor', 'drept', 'pregătire lucrare licență']
+                    'pregătire lucrare licență']
         },
         'informatică economică': {
             '1-1': ['economie', 'algebră', 'bazele statisticii', 'bazele cercetărilor operaționale',
@@ -61,8 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'dezvoltare software pentru analiza datelor', 'tehnologii web'],
             '3-2': ['sociologie', 'serii de timp', 'rețele de calculatoare',
                     'pachete software', 'sisteme informaționale economice',
-                    'calitate și testare software', 'dreptul afacerilor', 
-                    'drept', 'pregătire lucrare licență']
+                    'calitate și testare software', 'pregătire lucrare licență']
         },
         'statistică și previziune economică': {
             '1-1': ['economie', 'algebră', 'bazele statisticii', 'bazele cercetărilor operaționale',
@@ -77,17 +76,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     'macroeconomie cantitativă', 'practică de specialitate'],
             '3-1': ['modelarea și vizualizarea geospațială a datelor statistice',
                     'controlul statistic al calității', 'analiză statistică multidimensională',
-                    'sondaje și anchete statistice', 'demografie', 'teoria jocurilor',
-                    'cercetări operaționale', 'dinamica sistemelor economice',
-                    'programarea aplicațiilor Windows', 'tehnologii web', 'sgbd oracle',
-                    'robotică', 'modelare stochastică în domeniul economic'],
+                    'sondaje și anchete statistice', 'demografie', 'teoria jocurilor'],
             '3-2': ['previziune economică', 'statistica piețelor financiare', 'serii de timp',
                     'statistică microeconomică', 'sociologie',
-                    'proiectarea sistemelor informatice în statistică', 'dreptul afacerilor', 'drept']
+                    'proiectarea sistemelor informatice în statistică', 'pregătire lucrare licență']
         }
     };
 
-    const credite = {
+    const credite_old = {
         'cibernetică economică': {
             '1-1': {'economie': 5, 'algebră': 5, 'bazele statisticii': 5, 'bazele cercetărilor operaționale': 4,
                     'bazele tehnologiei informației': 6, 'bazele programării calculatoarelor': 3,
@@ -103,12 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     'microeconomie managerială': 4, 'practică de specialitate': 3},
             '3-1': {'cibernetica sistemelor economice': 5, 'cercetări operaționale': 5,
                     'economia și gestiunea riscului': 4, 'sisteme suport de decizie': 4, 'analiza datelor': 4,
-                    'dinamica sistemelor economice': 4, 'sondaje și anchete statistice': 4, 'demografie': 4,
-                    'tehnologii web': 4, 'multimedia': 4, 'sgbd oracle': 4, 'robotică': 4,
-                    'modelare stochastică în domeniul economic': 4},
+                    'dinamica sistemelor economice': 4},
             '3-2': {'sociologie': 2, 'serii de timp': 4, 'sisteme informaționale pentru conducere': 5,
                     'pachete software': 5, 'teoria jocurilor': 5, 'inteligență computațională în economie': 5,
-                    'dreptul afacerilor': 4, 'drept': 4, 'pregătire lucrare licență': 0}
+                    'pregătire lucrare licență': 0}
         },
         'informatică economică': {
             '1-1': {'economie': 5, 'algebră': 5, 'bazele statisticii': 5, 'bazele cercetărilor operaționale': 4,
@@ -125,13 +119,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     'programare multiparadigmă - java': 4, 'sgbd oracle': 4, 'practică de specialitate': 3},
             '3-1': {'econometrie': 4, 'analiza și proiectarea sistemelor informatice': 5,
                     'dispozitive și aplicații mobile': 5, 'multimedia': 4,
-                    'dezvoltare software pentru analiza datelor': 4, 'tehnologii web': 4,
-                    'demografie': 4, 'sondaje și anchete statistice': 4, 'robotică': 4,
-                    'modelare stochastică în domeniul economic': 4},
+                    'dezvoltare software pentru analiza datelor': 4, 'tehnologii web': 4},
             '3-2': {'sociologie': 2, 'serii de timp': 4, 'rețele de calculatoare': 5,
                     'pachete software': 5, 'sisteme informaționale economice': 5,
-                    'calitate și testare software': 5, 'dreptul afacerilor': 4, 'drept': 4,
-                    'pregătire lucrare licență': 0}
+                    'calitate și testare software': 5, 'pregătire lucrare licență': 0}
         },
         'statistică și previziune economică': {
             '1-1': {'economie': 5, 'algebră': 5, 'bazele statisticii': 5, 'bazele cercetărilor operaționale': 4,
@@ -148,59 +139,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     'macroeconomie cantitativă': 4, 'practică de specialitate': 3},
             '3-1': {'modelarea și vizualizarea geospațială a datelor statistice': 4,
                     'controlul statistic al calității': 5, 'analiză statistică multidimensională': 5,
-                    'sondaje și anchete statistice': 4, 'demografie': 4, 'teoria jocurilor': 4,
-                    'cercetări operaționale': 4, 'dinamica sistemelor economice': 4,
-                    'programarea aplicațiilor windows': 4, 'tehnologii web': 4, 'sgbd oracle': 4,
-                    'robotică': 4, 'modelare stochastică în domeniul economic': 4},
+                    'sondaje și anchete statistice': 4, 'demografie': 4, 'teoria jocurilor': 4},
             '3-2': {'previziune economică': 5, 'statistica piețelor financiare': 5, 'serii de timp': 5,
                     'statistică microeconomică': 4, 'sociologie': 2,
-                    'proiectarea sistemelor informatice în statistică': 5, 'dreptul afacerilor': 3,
-                    'drept': 3, 'pregătire lucrare licență': 0}
+                    'proiectarea sistemelor informatice în statistică': 5, 'pregătire lucrare licență': 0}
         }
     };
 
-    const crediteOptionale = {
-        '2-1': {
-            'construcție și depanare pc': 4,
-            'modele regionale de economie': 4,
-            'istoria economiei': 4,
-            'comunicare în limba engleză 1': 4,
-            'comunicare în limba franceză 1': 4,
-            'comunicare în limba rusă 1': 4,
-            'comunicare în limba spaniolă 1': 4,
-            'comunicare în limba italiană 1': 4,
-            'comunicare în limba germană 1': 4,
-            'comunicare în limba turcă 1': 4,
-            'comunicare în limba japoneză 1': 4,
-            'comunicare în limba chineză 1': 4
-        },
-        '2-2': {
-            'managementul riscului în afaceri internaționale': 3,
-            'antreprenoriat în comerț, turism și servicii': 3,
-            'finanțe corporative': 3,
-            'negocieri internaționale': 3,
-            'managementul relațiilor cu clienții': 3,
-            'etică și integritate academică': 3,
-            'economia informației digitale cu aplicații în afaceri': 3,
-            'dezvoltare durabilă': 3,
-            'analiza economico-financiară': 3,
-            'tehnici de scriere academică și învățare eficientă': 3,
-            
-            'doctrine economice': 4,
-            'competiție și competitivitate': 4,
-            'comunicare în limba engleză 2': 4,
-            'comunicare în limba germană 2': 4,
-            'comunicare în limba turcă 2': 4,
-            'comunicare în limba japoneză 2': 4,
-            'comunicare în limba chineză 2': 4,
-            'comunicare în limba franceză 2': 4,
-            'comunicare în limba rusă 2': 4,
-            'comunicare în limba spaniolă 2': 4,
-            'comunicare în limba italiană 2': 4
-        }
-    };
-    
-    const optiuniOptionale = {
+    const optiuniOptionale_old = {
         '2-1': {
             optiuni: ['construcție și depanare pc', 'modele regionale de economie', 'istoria economiei',
                      'comunicare în limba engleză 1', 'comunicare în limba franceză 1',
@@ -222,8 +168,178 @@ document.addEventListener('DOMContentLoaded', function() {
                      'dezvoltare durabilă', 'analiza economico-financiară',
                      'tehnici de scriere academică și învățare eficientă'],
             numar: 2
+        },
+        '3-1': {
+            optiuni: [
+                'sondaje și anchete statistice', 'demografie', 'tehnologii web', 'multimedia', 
+                'sgbd oracle', 'robotică', 'modelare stochastică în domeniul economic',
+                'cercetări operaționale', 'dinamica sistemelor economice', 
+                'programarea aplicațiilor windows', 'cibernetica sistemelor economice'
+            ],
+            numar: 2
+        },
+        '3-2': {
+            optiuni: ['dreptul afacerilor', 'drept'],
+            numar: 2
         }
     };
+
+    const crediteOptionale_old = {
+        '2-1': {
+            'construcție și depanare pc': 4, 'modele regionale de economie': 4, 'istoria economiei': 4,
+            'comunicare în limba engleză 1': 4, 'comunicare în limba franceză 1': 4,
+            'comunicare în limba rusă 1': 4, 'comunicare în limba spaniolă 1': 4,
+            'comunicare în limba italiană 1': 4, 'comunicare în limba germană 1': 4,
+            'comunicare în limba turcă 1': 4, 'comunicare în limba japoneză 1': 4, 'comunicare în limba chineză 1': 4
+        },
+        '2-2': {
+            'managementul riscului în afaceri internaționale': 3, 'antreprenoriat în comerț, turism și servicii': 3,
+            'finanțe corporative': 3, 'negocieri internaționale': 3, 'managementul relațiilor cu clienții': 3,
+            'etică și integritate academică': 3, 'economia informației digitale cu aplicații în afaceri': 3,
+            'dezvoltare durabilă': 3, 'analiza economico-financiară': 3, 'tehnici de scriere academică și învățare eficientă': 3,
+            'doctrine economice': 4, 'competiție și competitivitate': 4, 'comunicare în limba engleză 2': 4,
+            'comunicare în limba germană 2': 4, 'comunicare în limba turcă 2': 4, 'comunicare în limba japoneză 2': 4,
+            'comunicare în limba chineză 2': 4, 'comunicare în limba franceză 2': 4, 'comunicare în limba rusă 2': 4,
+            'comunicare în limba spaniolă 2': 4, 'comunicare în limba italiană 2': 4
+        },
+        '3-1': {
+            'sondaje și anchete statistice': 4, 'demografie': 4, 'tehnologii web': 4, 'multimedia': 4, 
+            'sgbd oracle': 4, 'robotică': 4, 'modelare stochastică în domeniul economic': 4,
+            'cercetări operaționale': 4, 'dinamica sistemelor economice': 4, 
+            'programarea aplicațiilor windows': 4, 'cibernetica sistemelor economice': 4
+        },
+        '3-2': {
+            'dreptul afacerilor': 4, 'drept': 4
+        }
+    };
+
+    const materii_2025 = {
+        'cibernetică economică': {
+            '1-1': ['economie', 'algebră', 'statistică', 'bazele tehnologiei informației', 'bazele programării calculatoarelor', 'bazele cercetărilor operaționale', 'introducere în contabilitate', 'limba engleză și comunicare de specialitate 1', 'educație fizică și sport 1'],
+            '1-2': ['analiză matematică', 'statistică inferențială', 'algoritmi și tehnici de programare', 'sisteme de operare', 'bazele ciberneticii economice', 'marketing', 'management', 'finanțe', 'educație fizică și sport 2'],
+            '2-1': ['programare orientată obiect', 'baze de date', 'statistică macroeconomică', 'probabilități și statistică matematică', 'microeconomie cantitativă', 'managementul riscului în afacerile internaționale', 'negociere, contractare și operațiuni comerciale internaționale', 'educație fizică și sport 3'],
+            '2-2': ['analiza și diagnoza sistemelor economice', 'macroeconomie cantitativă', 'teoria deciziei', 'simularea proceselor economice', 'econometrie', 'microeconomie managerială', 'practică de specialitate 2'],
+            '3-1': ['cibernetica sistemelor economice', 'cercetări operaționale', 'economia și gestiunea riscului', 'sisteme suport de decizie', 'analiza datelor', 'dinamica sistemelor economice', 'elaborare lucrare licență 1'],
+            '3-2': ['serii de timp', 'sisteme informaționale pentru conducere', 'pachete software', 'teoria jocurilor', 'inteligență computațională în economie', 'elaborare lucrare licență 2']
+        },
+        'informatică economică': {
+            '1-1': ['economie', 'algebră', 'statistică', 'bazele tehnologiei informației', 'bazele programării calculatoarelor', 'bazele cercetărilor operaționale', 'introducere în contabilitate', 'limba engleză și comunicare de specialitate 1', 'educație fizică și sport 1'],
+            '1-2': ['analiză matematică', 'statistică inferențială', 'algoritmi și tehnici de programare', 'sisteme de operare', 'bazele ciberneticii economice', 'marketing', 'management', 'finanțe', 'educație fizică și sport 2'],
+            '2-1': ['programare orientată obiect', 'baze de date', 'statistică macroeconomică', 'probabilități și statistică matematică', 'microeconomie cantitativă', 'managementul riscului în afaceri internaționale', 'negociere, contractare și operațiuni comerciale internaționale', 'educație fizică și sport 3'],
+            '2-2': ['programarea aplicațiilor windows', 'macroeconomie cantitativă', 'programare evolutivă și algoritmi genetici', 'structuri de date', 'programare multiparadigmă - java', 'sgbd oracle', 'practică de specialitate 2'],
+            '3-1': ['econometrie', 'analiza și proiectarea sistemelor informatice', 'dispozitive și aplicații mobile', 'multimedia', 'dezvoltare software pentru analiza datelor', 'tehnologii web', 'elaborare lucrare licență 1'],
+            '3-2': ['serii de timp', 'rețele de calculatoare', 'pachete software', 'sisteme informaționale economice', 'calitate și testare software', 'elaborare lucrare licență 2']
+        },
+        'statistică economică și data science': {
+            '1-1': ['economie', 'algebră', 'statistică', 'bazele tehnologiei informației', 'bazele programării calculatoarelor', 'bazele cercetărilor operaționale', 'introducere în contabilitate', 'limba engleză și comunicare de specialitate 1', 'educație fizică și sport 1'],
+            '1-2': ['analiză matematică', 'statistică inferențială', 'algoritmi și tehnici de programare', 'sisteme de operare', 'bazele ciberneticii economice', 'finanțe', 'management', 'marketing', 'educație fizică și sport 2'],
+            '2-1': ['programare orientată obiect', 'baze de date', 'statistică macroeconomică', 'probabilități și statistică matematică', 'microeconomie cantitativă', 'managementul riscului în afacerile internaționale', 'negociere, contractare și operațiuni comerciale internaționale', 'educație fizică și sport 3'],
+            '2-2': ['pachete software', 'statistică neparametrică', 'econometrie', 'analiza datelor panel și cauzalitate inferențială', 'testarea ipotezelor statistice', 'macroeconomie cantitativă', 'practică de specialitate 2'],
+            '3-1': ['modelarea și vizualizarea geospațială a datelor statistice', 'serii de timp', 'statistică spațială', 'sondaje și anchete statistice', 'demografie', 'teoria jocurilor', 'elaborarea lucrrii de licență 1'],
+            '3-2': ['tehnici utilizate în business intellingence', 'statistica piețelor financiare', 'tehnici de analiză multidimensional și data mining', 'managementul datelor statistice', 'proiectarea sistemelor informatice în statistică', 'elaborare lucrare licență 2']
+        }
+    };
+
+    const credite_2025 = {
+        'cibernetică economică': {
+            '1-1': {'economie': 3, 'algebră': 4, 'statistică': 5, 'bazele tehnologiei informației': 4, 'bazele programării calculatoarelor': 4, 'bazele cercetărilor operaționale': 5, 'introducere în contabilitate': 3, 'limba engleză și comunicare de specialitate 1': 2, 'educație fizică și sport 1': 1},
+            '1-2': {'analiză matematică': 5, 'statistică inferențială': 4, 'algoritmi și tehnici de programare': 4, 'sisteme de operare': 4, 'bazele ciberneticii economice': 4, 'marketing': 3, 'management': 3, 'finanțe': 3, 'educație fizică și sport 2': 1},
+            '2-1': {'programare orientată obiect': 5, 'baze de date': 5, 'statistică macroeconomică': 5, 'probabilități și statistică matematică': 5, 'microeconomie cantitativă': 5, 'managementul riscului în afacerile internaționale': 5, 'negociere, contractare și operațiuni comerciale internaționale': 5, 'educație fizică și sport 3': 1},
+            '2-2': {'analiza și diagnoza sistemelor economice': 4, 'macroeconomie cantitativă': 4, 'teoria deciziei': 4, 'simularea proceselor economice': 3, 'econometrie': 4, 'microeconomie managerială': 4, 'practică de specialitate 2': 4},
+            '3-1': {'cibernetica sistemelor economice': 4, 'cercetări operaționale': 5, 'economia și gestiunea riscului': 4, 'sisteme suport de decizie': 4, 'analiza datelor': 4, 'dinamica sistemelor economice': 4, 'elaborare lucrare licență 1': 2},
+            '3-2': {'serii de timp': 3, 'sisteme informaționale pentru conducere': 4, 'pachete software': 5, 'teoria jocurilor': 5, 'inteligență computațională în economie': 5, 'elaborare lucrare licență 2': 2}
+        },
+        'informatică economică': {
+            '1-1': {'economie': 3, 'algebră': 4, 'statistică': 5, 'bazele tehnologiei informației': 4, 'bazele programării calculatoarelor': 4, 'bazele cercetărilor operaționale': 5, 'introducere în contabilitate': 3, 'limba engleză și comunicare de specialitate 1': 2, 'educație fizică și sport 1': 1},
+            '1-2': {'analiză matematică': 5, 'statistică inferențială': 4, 'algoritmi și tehnici de programare': 4, 'sisteme de operare': 4, 'bazele ciberneticii economice': 4, 'marketing': 3, 'management': 3, 'finanțe': 3, 'educație fizică și sport 2': 1},
+            '2-1': {'programare orientată obiect': 5, 'baze de date': 5, 'statistică macroeconomică': 5, 'probabilități și statistică matematică': 5, 'microeconomie cantitativă': 5, 'managementul riscului în afaceri internaționale': 5, 'negociere, contractare și operațiuni comerciale internaționale': 5, 'educație fizică și sport 3': 1},
+            '2-2': {'programarea aplicațiilor windows': 4, 'macroeconomie cantitativă': 3, 'programare evolutivă și algoritmi genetici': 4, 'structuri de date': 4, 'programare multiparadigmă - java': 4, 'sgbd oracle': 4, 'practică de specialitate 2': 4},
+            '3-1': {'econometrie': 4, 'analiza și proiectarea sistemelor informatice': 4, 'dispozitive și aplicații mobile': 5, 'multimedia': 4, 'dezvoltare software pentru analiza datelor': 4, 'tehnologii web': 4, 'elaborare lucrare licență 1': 2},
+            '3-2': {'serii de timp': 3, 'rețele de calculatoare': 5, 'pachete software': 5, 'sisteme informaționale economice': 4, 'calitate și testare software': 5, 'elaborare lucrare licență 2': 2}
+        },
+        'statistică economică și data science': {
+            '1-1': {'economie': 3, 'algebră': 4, 'statistică': 5, 'bazele tehnologiei informației': 4, 'bazele programării calculatoarelor': 4, 'bazele cercetărilor operaționale': 5, 'introducere în contabilitate': 3, 'limba engleză și comunicare de specialitate 1': 2, 'educație fizică și sport 1': 1},
+            '1-2': {'analiză matematică': 5, 'statistică inferențială': 4, 'algoritmi și tehnici de programare': 4, 'sisteme de operare': 4, 'bazele ciberneticii economice': 4, 'finanțe': 3, 'management': 3, 'marketing': 3, 'educație fizică și sport 2': 1},
+            '2-1': {'programare orientată obiect': 5, 'baze de date': 5, 'statistică macroeconomică': 5, 'probabilități și statistică matematică': 5, 'microeconomie cantitativă': 5, 'managementul riscului în afacerile internaționale': 5, 'negociere, contractare și operațiuni comerciale internaționale': 5, 'educație fizică și sport 3': 1},
+            '2-2': {'pachete software': 4, 'statistică neparametrică': 4, 'econometrie': 4, 'analiza datelor panel și cauzalitate inferențială': 3, 'testarea ipotezelor statistice': 4, 'macroeconomie cantitativă': 4, 'practică de specialitate 2': 4},
+            '3-1': {'modelarea și vizualizarea geospațială a datelor statistice': 4, 'serii de timp': 4, 'statistică spațială': 5, 'sondaje și anchete statistice': 5, 'demografie': 4, 'teoria jocurilor': 3, 'elaborarea lucrrii de licență 1': 2},
+            '3-2': {'tehnici utilizate în business intellingence': 4, 'statistica piețelor financiare': 4, 'tehnici de analiză multidimensional și data mining': 4, 'managementul datelor statistice': 5, 'proiectarea sistemelor informatice în statistică': 5, 'elaborare lucrare licență 2': 2}
+        }
+    };
+
+    const optiuniOptionale_2025 = {
+        '2-1': { 
+            optiuni: ['construcție și depanare pc', 'modele regionale de economie', 'istoria economiei',
+                     'comunicare în limba engleză 1', 'comunicare în limba franceză 1',
+                     'comunicare în limba rusă 1', 'comunicare în limba spaniolă 1',
+                     'comunicare în limba italiană 1', 'comunicare în limba germană 1',
+                     'comunicare în limba turcă 1', 'comunicare în limba japoneză 1',
+                     'comunicare în limba chineză 1'],
+            numar: 2
+        },
+        '2-2': { 
+             optiuni: ['antreprenoriat în comerț, turism și servicii', 'managementul proiectelor', 'finanțe corporative',
+             'managementul relațiilor cu clienții', 'etică și integritate academică', 
+             'economia informației digitale cu aplicații în afaceri', 'analiză economico-financiară',
+             'dezvoltare durabilă', 'contabilitate pentru afaceri', 'comunicare financiar-bancară',
+             'doctrine economice', 'competiție și competitivitate',
+             'comunicare în limba engleză 2', 'comunicare în limba germană 2', 'comunicare în limba turcă 2',
+             'comunicare în limba japoneză 2', 'comunicare în limba chineză 2', 'comunicare în limba franceză 2',
+             'comunicare în limba rusă 2', 'comunicare în limba spaniolă 2', 'comunicare în limba italiană 2'],
+             numar: 2
+        },
+        '3-1': { 
+            optiuni: ['sondaje și anchete statistice', 'demografie', 'tehnologii web', 'multimedia', 'sgbd oracle', 'robotică',
+            'modelare stochastică în domeniul economic', 'tehnici de scriere academică și învățare eficientă',
+            'cercetări operaționale', 'dinamica sistemelor economice', 'programarea aplicațiilor windows'],
+            numar: 2
+        },
+        '3-2': { 
+            optiuni: ['dreptul afacerilor', 'drept', 'sociologie', 'sociologie economică'],
+            numar: 2
+        }
+    };
+
+    const crediteOptionale_2025 = {
+        '2-1': {
+            'construcție și depanare pc': 4, 'modele regionale de economie': 4, 'istoria economiei': 4,
+            'comunicare în limba engleză 1': 4, 'comunicare în limba franceză 1': 4,
+            'comunicare în limba rusă 1': 4, 'comunicare în limba spaniolă 1': 4,
+            'comunicare în limba italiană 1': 4, 'comunicare în limba germană 1': 4,
+            'comunicare în limba turcă 1': 4, 'comunicare în limba japoneză 1': 4, 'comunicare în limba chineză 1': 4
+        },
+        '2-2': {
+            'antreprenoriat în comerț, turism și servicii': 3, 'managementul proiectelor': 3, 'finanțe corporative': 3, 
+            'managementul relațiilor cu clienții': 3, 'etică și integritate academică': 3, 'economia informației digitale cu aplicații în afaceri': 3, 
+            'analiză economico-financiară': 3, 'dezvoltare durabilă': 3, 'contabilitate pentru afaceri': 3, 'comunicare financiar-bancară': 3,
+            'doctrine economice': 4, 'competiție și competitivitate': 4,
+            'comunicare în limba engleză 2': 4, 'comunicare în limba germană 2': 4, 'comunicare în limba turcă 2': 4,
+            'comunicare în limba japoneză 2': 4, 'comunicare în limba chineză 2': 4, 'comunicare în limba franceză 2': 4,
+            'comunicare în limba rusă 2': 4, 'comunicare în limba spaniolă 2': 4, 'comunicare în limba italiană 2': 4
+        },
+        '3-1': {
+            'sondaje și anchete statistice': 3, 'demografie': 3, 'tehnologii web': 3, 'multimedia': 3, 'sgbd oracle': 3, 'robotică': 3,
+            'modelare stochastică în domeniul economic': 3, 'tehnici de scriere academică și învățare eficientă': 3,
+            'cercetări operaționale': 3, 'dinamica sistemelor economice': 3, 'programarea aplicațiilor windows': 3
+        },
+        '3-2': {
+            'dreptul afacerilor': 3, 'drept': 3, 'sociologie': 3, 'sociologie economică': 3
+        }
+    };
+
+    let materii, credite, optiuniOptionale, crediteOptionale;
+
+    if (promotieActiva === '2025-2028') {
+        materii = materii_2025;
+        credite = credite_2025;
+        optiuniOptionale = optiuniOptionale_2025;
+        crediteOptionale = crediteOptionale_2025;
+    } else {
+        materii = materii_old;
+        credite = credite_old;
+        optiuniOptionale = optiuniOptionale_old;
+        crediteOptionale = crediteOptionale_old;
+    }
 
     let optionaleSelectate = {};
 
@@ -237,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (optiuniOptionale[cheie] && optiuniOptionale[cheie].optiuni.includes(materie)) {
-            return 4;
+            return 3;
         }
         
         return isPhysicalEducation(materie) ? 1 : 3;
@@ -266,12 +382,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                console.log('Dashboard position saved:', year, semester);
-            }
         })
         .catch(error => {
-            console.error('Error saving dashboard position:', error);
         });
     }
 
@@ -288,7 +400,6 @@ document.addEventListener('DOMContentLoaded', function() {
             avgElement.setAttribute('title', `Media generală: ${overallAvg}`);
         })
         .catch(error => {
-            console.error('Error fetching averages:', error);
             updateLocalAverage();
         });
     }
@@ -298,37 +409,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const semestru = semesterSelect.value;
         const cheie = `${an}-${semestru}`;
         
-        let totalCredits = 0;
-        let totalWeighted = 0;
-        let gradesCount = 0;
+        let totalWeightedPoints = 0; 
+        let totalCreditsForAvg = 0;  
+        let totalCreditsEarned = 0;  
         
-        if (materii[specializare] && materii[specializare][cheie]) {
-            materii[specializare][cheie].forEach(materie => {
+        const specializareKey = specializare.toLowerCase().trim();
+
+        if (materii[specializareKey] && materii[specializareKey][cheie]) {
+            materii[specializareKey][cheie].forEach(materie => {
                 const gradeKey = `${an}-${semestru}-${materie}`;
                 const gradeValue = note[gradeKey];
                 
                 if (gradeValue) {
-                    const creditValue = getCreditePentruMaterie(materie, cheie, specializare);
+                    const creditValue = getCreditePentruMaterie(materie, cheie, specializareKey);
                     
                     if (isPhysicalEducation(materie)) {
                         if (gradeValue === 'admis' && creditValue > 0) {
-                            totalCredits += creditValue;
+                            totalWeightedPoints += creditValue; 
+                            totalCreditsForAvg += creditValue;
+                            totalCreditsEarned += creditValue;
                         }
                     } else {
                         const gradeNum = parseInt(gradeValue);
-                        if (!isNaN(gradeNum) && gradeNum >= 5 && creditValue > 0) {
-                            totalWeighted += gradeNum * creditValue;
-                            gradesCount += creditValue;
-                            totalCredits += creditValue;
+                        if (!isNaN(gradeNum) && creditValue > 0) {
+                            totalWeightedPoints += gradeNum * creditValue;
+                            totalCreditsForAvg += creditValue;
+
+                            if (gradeNum >= 5) {
+                                totalCreditsEarned += creditValue;
+                            }
                         }
                     }
                 }
             });
         }
         
-        const avgGrade = gradesCount > 0 ? (totalWeighted / gradesCount).toFixed(2) : '-';
+        const avgGrade = totalCreditsForAvg > 0 ? (totalWeightedPoints / totalCreditsForAvg).toFixed(2) : '-';
+        
         document.getElementById('avgGrade').textContent = avgGrade;
-        document.getElementById('totalCredits').textContent = totalCredits;
+        document.getElementById('totalCredits').textContent = totalCreditsEarned;
     }
 
     function checkNextSemesterExists(year, semester) {
@@ -347,11 +466,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const an = yearSelect.value;
         const semestru = semesterSelect.value;
         const cheie = `${an}-${semestru}`;
+        const specializareKey = specializare.toLowerCase().trim();
         
         const grades = [];
         
-        if (materii[specializare] && materii[specializare][cheie]) {
-            materii[specializare][cheie].forEach(materie => {
+        if (materii[specializareKey] && materii[specializareKey][cheie]) {
+            materii[specializareKey][cheie].forEach(materie => {
                 const gradeKey = `${an}-${semestru}-${materie}`;
                 const gradeValue = note[gradeKey];
 
@@ -360,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         grades.push({
                             subject: materie,
                             grade: gradeValue,
-                            credits: getCreditePentruMaterie(materie, cheie, specializare),
+                            credits: getCreditePentruMaterie(materie, cheie, specializareKey),
                             isPE: true
                         });
                     }
@@ -370,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         grades.push({
                             subject: materie,
                             grade: numericGrade,
-                            credits: getCreditePentruMaterie(materie, cheie, specializare),
+                            credits: getCreditePentruMaterie(materie, cheie, specializareKey),
                             isPE: false
                         });
                     }
@@ -433,6 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const year = predictions.next_year;
         const semester = predictions.next_semester;
         const nextSemesterKey = `${year}-${semester}`;
+        const specializareKey = specializare.toLowerCase().trim();
         
         let totalPredictedGrades = 0;
         let totalSubjects = 0;
@@ -441,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Object.entries(predictions.predictions).forEach(([subject, predictedValue]) => {
             const tr = document.createElement('tr');
             
-            const creditValue = getCreditePentruMaterie(subject, nextSemesterKey, specializare);
+            const creditValue = getCreditePentruMaterie(subject, nextSemesterKey, specializareKey);
             const confidence = predictions.confidence;
             
             let displayValue = '';
@@ -506,7 +627,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error generating predictions:', error);
             showToast('eroare de conexiune la generarea predicțiilor', 'error');
         })
         .finally(() => {
@@ -526,7 +646,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateInputStates();
             })
             .catch(error => {
-                console.error('Error fetching available periods:', error);
                 availablePeriods = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2'];
             });
     }
@@ -575,7 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching missing subjects:', error);
                     if (messageEl) {
                         messageEl.style.display = 'block';
                         messageEl.textContent = `completează toate notele din perioada anterioară`;
@@ -597,7 +715,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         gradesTableBody.innerHTML = '';
 
-        const listaMaterii = materii[specializare] ? materii[specializare][cheie] : null;
+        const specializareKey = specializare.toLowerCase().trim();
+        
+        let listaMaterii = null;
+        if (materii[specializareKey]) {
+            listaMaterii = materii[specializareKey][cheie];
+        }
+
         const optionalData = optiuniOptionale[cheie] || null;
         
         let totalCredits = 0;
@@ -609,7 +733,8 @@ document.addEventListener('DOMContentLoaded', function() {
             listaMaterii.forEach(materie => {
                 const tr = document.createElement('tr');
                 
-                const creditValue = getCreditePentruMaterie(materie, cheie, specializare);
+                const creditValue = getCreditePentruMaterie(materie, cheie, specializareKey);
+                
                 const gradeKey = `${an}-${semestru}-${materie}`;
                 const gradeValue = note[gradeKey] || '';
                 
@@ -688,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optionalData.optiuni.forEach(materie => {
                     const tr = document.createElement('tr');
                     tr.className = 'optional-subject';
-                    const creditValue = getCreditePentruMaterie(materie, cheie, specializare);
+                    const creditValue = getCreditePentruMaterie(materie, cheie, specializareKey);
                     const gradeKey = `${an}-${semestru}-${materie}`;
                     const gradeValue = note[gradeKey] || '';
                     const isSelected = optionaleSelectate && optionaleSelectate[cheie] && 
@@ -754,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td colspan="4" class="no-subjects">
-                    nu există materii definite pentru această perioadă.
+                    nu există materii definite pentru această perioadă.<br>
                 </td>
             `;
             gradesTableBody.appendChild(tr);
@@ -823,7 +948,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             showToast('eroare de conexiune!', 'error');
             input.value = note[key] || '';
         });

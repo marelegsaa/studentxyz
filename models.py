@@ -8,6 +8,7 @@ class User(db.Model):
     prenume = db.Column(db.String(100), nullable=False)
     facultate = db.Column(db.String(100), nullable=False)
     specializare = db.Column(db.String(100), nullable=False)
+    promotie = db.Column(db.String(20), nullable=False, default='2024-2027')
     an = db.Column(db.String(10), nullable=False)
     semestru_curent = db.Column(db.String(10), nullable=True, default='1')
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -19,6 +20,8 @@ class User(db.Model):
     data_nasterii = db.Column(db.String(20), nullable=True)
     pending_email = db.Column(db.String(100), nullable=True)
 
+    note = db.relationship('Nota', backref='user', lazy=True, cascade="all, delete-orphan")
+
 class Nota(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -26,5 +29,3 @@ class Nota(db.Model):
     semestru = db.Column(db.Integer, nullable=False)
     materie = db.Column(db.String(120), nullable=False)
     nota = db.Column(db.Integer, nullable=True)
-
-    user = db.relationship('User', backref=db.backref('note', lazy=True))

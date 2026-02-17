@@ -122,12 +122,20 @@
                     <span class="detail_value">{{ facultate_display }}</span>
                 </div>
                 <div class="detail_item">
+                    <span class="detail_label">promoția</span>
+                    <span class="detail_value">{{ user.promotie }}</span>
+                </div>
+                <div class="detail_item">
                     <span class="detail_label">specializare</span>
                     <span class="detail_value">{{ user.specializare }}</span>
                 </div>
                 <div class="detail_item">
                     <span class="detail_label">anul de studiu</span>
                     <span class="detail_value">anul {{ user.an }}</span>
+                </div>
+                <div class="detail_item">
+                    <span class="detail_label">semestru</span>
+                    <span class="detail_value">semestrul {{ user.semestru_curent }}</span>
                 </div>
                 <div class="detail_item">
                     <span class="detail_label">media generală</span>

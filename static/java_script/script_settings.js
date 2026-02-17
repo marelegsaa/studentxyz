@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const facultateSelect = document.getElementById('facultate');
-    const specializareSelect = document.getElementById('specializare');
-    
+    const facultateSelect = document.querySelector('select[name="facultate"]');
+    const specializareSelect = document.querySelector('select[name="specializare"]');
+    const promotieSelect = document.querySelector('select[name="promotie"]');
+
     const specializari = {
         csie: [
             "cibernetică economică",
@@ -51,17 +52,45 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     function updateSpecializari() {
-        const selected = facultateSelect.value;
-        specializareSelect.innerHTML = '';
+        if (!facultateSelect || !specializareSelect) return;
+
+        const selectedFacultate = facultateSelect.value;
+        const selectedPromotie = promotieSelect ? promotieSelect.value : '';
         
-        if (specializari[selected]) {
-            specializari[selected].forEach(function(spec) {
+        const currentVal = specializareSelect.value || (typeof currentSpecialization !== 'undefined' ? currentSpecialization : '');
+
+        specializareSelect.innerHTML = '';
+
+        if (!selectedFacultate) return;
+
+        let listaSpec = specializari[selectedFacultate] || [];
+
+        if (selectedFacultate === 'csie') {
+            if (selectedPromotie === '2025-2028') {
+                listaSpec = [
+                    "cibernetică economică",
+                    "informatică economică",
+                    "statistică economică și data science"
+                ];
+            } else {
+                listaSpec = [
+                    "cibernetică economică",
+                    "informatică economică",
+                    "statistică și previziune economică"
+                ];
+            }
+        }
+
+        if (listaSpec.length > 0) {
+            listaSpec.forEach(function(spec) {
                 const opt = document.createElement('option');
                 opt.value = spec;
                 opt.textContent = spec;
-                if (spec === currentSpecialization) {
+
+                if (spec === currentVal) {
                     opt.selected = true;
                 }
+                
                 specializareSelect.appendChild(opt);
             });
         }
@@ -71,6 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSpecializari();
 
         facultateSelect.addEventListener('change', updateSpecializari);
+
+        if (promotieSelect) {
+            promotieSelect.addEventListener('change', updateSpecializari);
+        }
     }
 
     const flashMessages = document.querySelectorAll('.flash-messages > div');
