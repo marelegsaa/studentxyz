@@ -409,9 +409,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const semestru = semesterSelect.value;
         const cheie = `${an}-${semestru}`;
         
-        let totalWeightedPoints = 0; 
-        let totalCreditsForAvg = 0;  
-        let totalCreditsEarned = 0;  
+        let totalWeightedPoints = 0;
+        let totalCreditsForAvg = 0;
+        let totalCreditsEarned = 0;
         
         const specializareKey = specializare.toLowerCase().trim();
 
@@ -425,8 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (isPhysicalEducation(materie)) {
                         if (gradeValue === 'admis' && creditValue > 0) {
-                            totalWeightedPoints += creditValue; 
-                            totalCreditsForAvg += creditValue;
                             totalCreditsEarned += creditValue;
                         }
                     } else {
@@ -443,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        
+
         const avgGrade = totalCreditsForAvg > 0 ? (totalWeightedPoints / totalCreditsForAvg).toFixed(2) : '-';
         
         document.getElementById('avgGrade').textContent = avgGrade;

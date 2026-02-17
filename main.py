@@ -221,7 +221,7 @@ def predict_next_semester_grades(user_id, current_year, current_semester):
             base_prediction += random.uniform(-0.2, 0.2)
             
             predicted_grade = max(1, min(10, base_prediction))
-            predictions[subject] = round(predicted_grade, 0)
+            predictions[subject] = round(predicted_grade, 1)
         
         if len(valid_grades) > 1:
             mean_val = sum(valid_grades) / len(valid_grades)
@@ -315,14 +315,16 @@ def calculate_semester_average(user_id, year, semester):
     specializare = user.specializare
     promotie = user.promotie
 
-    materii_dict = get_materii(promotie)
     credite_dict = get_credite(promotie)
     credite_opt_dict = get_credite_optionale(promotie)
     
     total_points = 0
-    total_credits = 0
+    total_credits_calc = 0
     
     for nota in notes:
+        if is_physical_education(nota.materie):
+            continue
+
         cheie = f"{nota.an}-{nota.semestru}"
         credits = 3
         
@@ -332,14 +334,6 @@ def calculate_semester_average(user_id, year, semester):
             credits = credite_dict[specializare][cheie][nota.materie]
         elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
             credits = credite_opt_dict[cheie][nota.materie]
-        elif is_physical_education(nota.materie):
-            credits = 1
-
-        if is_physical_education(nota.materie):
-            if str(nota.nota).lower() == 'admis':
-                total_points += credits
-                total_credits += credits
-            continue
             
         try:
             if isinstance(nota.nota, str): continue
@@ -349,10 +343,10 @@ def calculate_semester_average(user_id, year, semester):
         
         if credits > 0:
             total_points += nota_value * credits
-            total_credits += credits
+            total_credits_calc += credits
     
-    if total_credits > 0:
-        return round(total_points / total_credits, 2)
+    if total_credits_calc > 0:
+        return round(total_points / total_credits_calc, 2)
     return None
 
 def get_overall_average(user_id):
@@ -369,9 +363,12 @@ def get_overall_average(user_id):
     credite_opt_dict = get_credite_optionale(promotie)
     
     total_points = 0
-    total_credits = 0
+    total_credits_calc = 0
     
     for nota in notes:
+        if is_physical_education(nota.materie):
+            continue
+            
         cheie = f"{nota.an}-{nota.semestru}"
         credits = 3
         
@@ -381,14 +378,6 @@ def get_overall_average(user_id):
             credits = credite_dict[specializare][cheie][nota.materie]
         elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
             credits = credite_opt_dict[cheie][nota.materie]
-        elif is_physical_education(nota.materie):
-            credits = 1
-        
-        if is_physical_education(nota.materie):
-            if str(nota.nota).lower() == 'admis':
-                total_points += credits
-                total_credits += credits
-            continue
             
         try:
             if isinstance(nota.nota, str): continue
@@ -398,10 +387,10 @@ def get_overall_average(user_id):
 
         if credits > 0:
             total_points += nota_value * credits
-            total_credits += credits
+            total_credits_calc += credits
     
-    if total_credits > 0:
-        return round(total_points / total_credits, 2)
+    if total_credits_calc > 0:
+        return round(total_points / total_credits_calc, 2)
     return None
 
 def get_all_semester_averages(user_id):
@@ -438,9 +427,12 @@ def get_yearly_averages(user_id):
             continue
         
         total_points = 0
-        total_credits = 0
+        total_credits_calc = 0
         
         for nota in notes:
+            if is_physical_education(nota.materie):
+                continue
+
             cheie = f"{nota.an}-{nota.semestru}"
             credits = 3
             
@@ -450,15 +442,7 @@ def get_yearly_averages(user_id):
                 credits = credite_dict[specializare][cheie][nota.materie]
             elif cheie in credite_opt_dict and nota.materie in credite_opt_dict[cheie]:
                 credits = credite_opt_dict[cheie][nota.materie]
-            elif is_physical_education(nota.materie):
-                credits = 1
             
-            if is_physical_education(nota.materie):
-                if str(nota.nota).lower() == 'admis':
-                    total_points += credits
-                    total_credits += credits
-                continue
-
             try:
                 if isinstance(nota.nota, str): continue
                 nota_value = int(nota.nota)
@@ -467,10 +451,10 @@ def get_yearly_averages(user_id):
             
             if credits > 0:
                 total_points += nota_value * credits
-                total_credits += credits
+                total_credits_calc += credits
         
-        if total_credits > 0:
-            yearly_averages[f"An {year}"] = round(total_points / total_credits, 2)
+        if total_credits_calc > 0:
+            yearly_averages[f"An {year}"] = round(total_points / total_credits_calc, 2)
     
     return yearly_averages
 
