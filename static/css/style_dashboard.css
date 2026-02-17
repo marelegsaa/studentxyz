@@ -108,6 +108,11 @@
     box-shadow: 0 0 20px rgba(153, 255, 153, 0.2);
 }
 
+.selector_select option {
+    background-color: #2a2a2a;
+    color: white;
+}
+
 .grades_section, .prediction_section {
     background: linear-gradient(135deg, rgba(28, 28, 28, 0.95) 0%, rgba(35, 35, 35, 0.95) 100%);
     border-radius: 16px;
